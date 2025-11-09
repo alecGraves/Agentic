@@ -1,0 +1,14 @@
+[
+    {
+        "caption": "AI Agent",
+        "command": "agent_code"
+    },
+    {
+        "caption": "AI Agent Chat",
+        "command": "agent_chat"
+    },
+    {
+        "caption": "AI Agent Clear Reasoning",
+        "command": "agent_clear_reasoning"
+    },
+]

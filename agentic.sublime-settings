@@ -1,0 +1,221 @@
+{
+	// Default values that the user can override
+	"models_ultra": {
+		"ultra_1":
+		{
+			"url": "http://127.0.0.1:12903/v1/chat/completions",
+			"model": "gpt-oss-120b",
+			"token": "000000000000",
+			"options": {
+				"stream": true,  // this is the only thing that works for now
+				"reasoning": {"effort":"high"},
+			},
+			"context": 128000.0,
+			"system": "pandora_cpu",
+			"workers": 1,
+			"speed": 15.0,
+			"effort": 32768.0
+		},
+		"ultra_2":
+		{
+			"url": "http://127.0.0.1:12904/v1/chat/completions",
+			"model": "gpt-oss-120b",
+			"token": "000000000000",
+			"options": {
+				"stream": true,
+				"reasoning": {"effort":"high"},
+			},
+			"context": 62000.0,
+			"system": "node0_cpu",
+			"workers": 1,
+			"speed": 10.0,
+			"effort": 32768.0
+		}
+	},
+	"models_high": {
+		"high_1":
+		{
+			"url": "http://127.0.0.1:12899/v1/chat/completions",
+			"model": "gpt-oss-20b",
+			"token": "000000000000",
+			"options": {
+				"stream": true,
+				"reasoning": {"effort":"high"},
+			},
+			"context": 128000.0,
+			"system": "midnight_1",
+			"workers": 3,
+			"speed": 100,
+			"effort": 32768.0
+		},
+		"high_2":
+		{
+			"url": "http://127.0.0.1:12900/v1/chat/completions",
+			"model": "gpt-oss-20b",
+			"token": "000000000000",
+			"options": {
+				"stream": true,
+				"reasoning": {"effort":"high"},
+			},
+			"context": 92000.0,
+			"system": "node0_1",
+			"workers": 1,
+			"speed": 50,
+			"effort": 32768.0
+		},
+		"high_3":
+		{
+			"url": "http://127.0.0.1:12901/v1/chat/completions",
+			"model": "gpt-oss-20b",
+			"token": "000000000000",
+			"options": {
+				"stream": true,
+				"reasoning": {"effort":"high"},
+			},
+			"context": 92000.0,
+			"system": "node0_2",
+			"workers": 1,
+			"speed": 50,
+			"effort": 32768.0
+		},
+		"high_4":
+		{
+			"url": "http://127.0.0.1:12902/v1/chat/completions",
+			"model": "gpt-oss-20b",
+			"token": "000000000000",
+			"options": {
+				"stream": true,
+				"reasoning": {"effort":"high"},
+			},
+			"context": 128000.0,
+			"system": "pandora_1",
+			"workers": 3,
+			"speed": 160,
+			"effort": 32768.0
+		},
+	},
+	"models_medium": {
+		"medium_1":
+		{
+			"url": "http://127.0.0.1:12899/v1/chat/completions",
+			"model": "gpt-oss-20b",
+			"token": "000000000000",
+			"options": {
+				"stream": true,
+				"reasoning": {"effort":"medium"},
+			},
+			"context": 128000.0,
+			"system": "midnight_1",
+			"workers": 3,
+			"speed": 100,
+			"effort": 4096.0
+		},
+		"medium_2":
+		{
+			"url": "http://127.0.0.1:12900/v1/chat/completions",
+			"model": "gpt-oss-20b",
+			"token": "000000000000",
+			"options": {
+				"stream": true,
+				"reasoning": {"effort":"medium"},
+			},
+			"context": 92000.0,
+			"system": "node0_1",
+			"workers": 1,
+			"speed": 50,
+			"effort": 4096.0
+		},
+		"medium_3":
+		{
+			"url": "http://127.0.0.1:12901/v1/chat/completions",
+			"model": "gpt-oss-20b",
+			"token": "000000000000",
+			"options": {
+				"stream": true,
+				"reasoning": {"effort":"medium"},
+			},
+			"context": 92000.0,
+			"system": "node0_2",
+			"workers": 1,
+			"speed": 50,
+			"effort": 4096.0
+		},
+		"medium_4":
+		{
+			"url": "http://127.0.0.1:12902/v1/chat/completions",
+			"model": "gpt-oss-20b",
+			"token": "000000000000",
+			"options": {
+				"stream": true,
+				"reasoning": {"effort":"medium"},
+			},
+			"context": 128000.0,
+			"system": "pandora_1",
+			"workers":3,
+			"speed": 160,
+			"effort": 4096.0
+		},
+	},
+	"models_low": {
+		"low_1":
+		{
+			"url": "http://127.0.0.1:12899/v1/chat/completions",
+			"model": "gpt-oss-20b",
+			"token": "000000000000",
+			"options": {
+				"stream": true,
+				"reasoning": {"effort":"low"},
+			},
+			"context": 128000.0,
+			"system": "midnight_1",
+			"workers": 3,
+			"speed": 100,
+			"effort": 512.0
+		},
+		"low_2":
+		{
+			"url": "http://127.0.0.1:12900/v1/chat/completions",
+			"model": "gpt-oss-20b",
+			"token": "000000000000",
+			"options": {
+				"stream": true,
+				"reasoning": {"effort":"low"},
+			},
+			"context": 92000.0,
+			"system": "node0_1",
+			"workers": 1,
+			"speed": 50,
+			"effort": 512.0
+		},
+		"low_3":
+		{
+			"url": "http://127.0.0.1:12901/v1/chat/completions",
+			"model": "gpt-oss-20b",
+			"token": "000000000000",
+			"options": {
+				"stream": true,
+				"reasoning": {"effort":"low"},
+			},
+			"context": 92000.0,
+			"system": "node0_2",
+			"workers": 1,
+			"speed": 50,
+			"effort": 512.0
+		},
+		"low_4":
+		{
+			"url": "http://127.0.0.1:12902/v1/chat/completions",
+			"model": "gpt-oss-20b",
+			"token": "000000000000",
+			"options": {
+				"stream": true,
+				"reasoning": {"effort":"low"},
+			},
+			"context": 128000.0,
+			"system": "pandora_1",
+			"workers":3,
+			"speed": 160,
+			"effort": 512.0
+		},
+	},
+}

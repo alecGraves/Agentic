@@ -1,0 +1,32 @@
+[
+    {
+        "keys": ["escape"],
+        "command": "cancel_stream",
+        "context": [
+            { "key": "setting.is_streaming", "operand": true }
+        ]
+    },
+    {
+        "keys": ["c"],
+        "command": "cancel_stream",
+        "context": [
+            { "key": "setting.is_streaming", "operand": true }
+        ]
+    },
+    {
+        "keys": ["super+enter"],
+        "command": "cancel_stream",
+        "context": [
+            { "key": "setting.is_agent_chat", "operand": true },
+            { "key": "setting.is_streaming", "operand": true }
+        ]
+    },
+    {
+        "keys": ["super+enter"],
+        "command": "agent_chat",
+        "context": [
+            { "key": "setting.is_agent_chat", "operand": true },
+            { "key": "setting.is_streaming", "operand": false }
+        ]
+    }
+]
