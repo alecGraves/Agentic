@@ -7,7 +7,19 @@ Sublime breathes code,
 Agents speak in marked whispers,  
 Chats rise, fall, then rest.
 ```
-*~GPT-OSS-20b with chat_stream.py using the "haiku" action*
+*~GPT-OSS-20b on Agentic/chat_stream.py with using the "haiku" action*
+
+This is a plugin that lets you run models over OpenAI-style chat completion APIs, tested with `llama-server`. You can use this plugin to send code snippets or files and get LLM results directly in Sublime Text. Chatting is supported through a simple markdown text file interface with hotkeys (`[ctrl/cmd]+[enter]`, `[esc]/[c]`). There is also support to easily build custom agent actions that you can quickly access from the command palette.
+
+### Features 😍
+**Highlight code and use `AI Agent` to launch a custom chat with relevant context:**
+![Highlight a Code Section and Start a Chat](pics/highlight_chat.png)
+
+**Define and quickly launch custom actions on code sections or whole files with `AI Agent Actions`:**
+![Define and Run Custom Actions](pics/custom_actions.png)
+
+**Fast and streamlined interactive markdown chat interface with fully editable history:**
+![Markdown-formatted Documents are used for LLM Chat](pics/markdown_chat.png)
 
 ### Usage 🛠
 This plugin currently has three major command pallet actions:
@@ -24,7 +36,6 @@ For settings, there is a convenience command:
 - `AI Agent Settings` which will open your configuration file `Agentic.sublime-settings`.
 
 ### Settings ✏
-
 Configuring user-defined actions (`AI Agent Settings` / `Agentic.sublime-settings`):
 ```json
 "actions": {
