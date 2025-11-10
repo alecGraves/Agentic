@@ -7,7 +7,7 @@ Sublime breathes code,
 Agents speak in marked whispers,  
 Chats rise, fall, then rest.
 ```
-*~ GPT-OSS-20b with chat_stream.py using the "haiku" action*
+*~GPT-OSS-20b with chat_stream.py using the "haiku" action*
 
 ### Usage 🛠
 This plugin currently has three major command pallet actions:
@@ -20,8 +20,51 @@ There are also several supplemental pallet actions to help control chats
 - `AI Agent Clone Chat` - creates a copy of an existing chat
 - `AI Agent New Chat` - creates a new chat file
 
-For configuration, there is a convenience command:
-- `AI Agent Settings` which will copy and open your configuration file.
+For settings, there is a convenience command:
+- `AI Agent Settings` which will open your configuration file `Agentic.sublime-settings`.
+
+### Settings ✏
+
+Configuring user-defined actions (`AI Agent Settings` / `Agentic.sublime-settings`):
+```json
+"actions": {
+		// Each action has a key word (which shows up in the menu):
+		"haiku": {
+			"models": "models_high", // name of list of models to use
+			"system": "You are an expert.", // system prompt
+			"prompt": "Turn this into a haiku." // user prompt
+		},
+		...
+}
+```
+
+Configuring models (`AI Agent Settings` / `Agentic.sublime-settings`):
+```json
+"models_high": ["high_1", "high_2"], // Named model list for capability family
+"models": {
+		"high_1": // Each model configuration has a name
+		{
+			"url": "http://127.0.0.1:8080/v1/chat/completions",
+			"model": "gpt-oss-20b", // API model name
+			"token": "000000000000",// API Token
+			"options": {            // API parameters go in "options"
+				"stream": true,
+				"chat_template_kwargs": {"reasoning_effort": "high"},
+				"temperature": 1.0,
+				"top_p": 1.0,
+				"min_p": 0,
+				"top_k": 0
+			},
+			"context": 128000.0,  // Approximate usable context length
+			"system": "my_gpu1",  // A unique resource id (for local systems)
+			"workers": 3,         // Number of concurrent requests supported
+			"speed": 120,         // Approximate tokens per second
+			"effort": 32768.0     // Output tokens required on average to solve
+		},
+		"high_2":
+		...
+}
+```
 
 ## Installation 📂
 You can install this plugin by copying its contents to your `Packages` folder:
