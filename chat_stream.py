@@ -1,16 +1,28 @@
 # Packages/AgentChat/chat_plugin.py
 # -------------------------------------------------------------
-#  AI‑Chat plugin – two simple commands
+#  Agentic AI plugin: three primary commands
 #
-#  * AiAgentCodeCommand  – create a brand‑new scratch view, write the system
-#                           prompt + user prompt, then start streaming.
+#  * AI Agent        – Execute an arbitrary prompt providing a code
+#                       snippet or file
 #
-#  * AgentChatCommand    – stream on an existing chat view that already
-#                           contains the tags "# --- System ---",
-#                           "# --- User ---", "# --- Agent ---".
+#  * AI Agent Action – Execute user-defined custom agent action
+#                       on a custom code section.
 #
-#  All streaming logic lives in `start_streaming()` – the single code
-#  path used by both commands.
+#  * AI Agent Chat   – Stream on an existing chat view that already
+#                       contains the tags "# --- System ---",
+#                       "# --- User ---", "# --- Agent ---".
+#                       Run with [ctrl/cmd] + [enter] in a chat file.
+#
+#  Supplemental chat management commands
+#
+#  * AI Agent Clear Reasoning  – Erase reasoning output from a chat
+#
+#  * AI Agent Clone Chat  – Create a copy of the current chat
+#
+#  * AI Agent New Chat    – Prepare a new chat file
+#
+#  All API call logic lives in `_chat_stream()` – the single code
+#  path used by all three commands.
 #
 #  The plugin uses only Python features available in older
 #  Sublime Text builds (no f‑string syntax, only .format()).
@@ -24,25 +36,34 @@ import random
 import sublime
 import sublime_plugin
 
-MODELS_HIGH = sublime.load_settings("agentic.sublime-settings").get("models_high")
-
-# --------------------------------------------------------------------
-# Configuration
-# --------------------------------------------------------------------
-SYSTEM_PROMPT = (
-    "You are an expert programming agent. Focus on correctness and simplicity."
-)
+CHARS_PER_TOKEN = 4.4  # Based on python+english data
 
 # Registry of ongoing streams: view.id() → StreamingTask
 _ACTIVE_STREAMERS = {}
 
+# Tags for chat file
+TAG_MAP = {
+    "developer": "# --- System ---",
+    "user": "# --- User ---",
+    "assistant": "# --- Agent ---",
+}
 
-# --------------------------------------------------------------------
-# 1)  Streaming generator – talks to the local OpenAI server
-# --------------------------------------------------------------------
-def chat_stream(messages,
-                model):
+
+def _pick_model(capability=None):
+    """Return a random model from the provided model list string"""
+    settings = sublime.load_settings("agentic.sublime-settings")
+    if capability is None:
+        capability = settings.get("default_models")
+    capable_models = settings.get(capability)
+    models = settings.get("models")
+    model = random.choice([models[m] for m in capable_models])
+    print(model)
+    return model
+
+
+def _chat_stream(messages, model):
     """
+    Query an OpenAI server given messages and a model configuration.
     Yields `(is_reasoning, text)` for incremental stream chunks.
     At the end yields a 4‑tuple of timing metrics:
         (cache_n, prompt_n, prompt_per_second, predicted_per_second).
@@ -53,8 +74,8 @@ def chat_stream(messages,
     body.update({
         "messages": messages,
         "model": model.get("model"),
-        "stream": True,  # required for now
     })
+    stream = body["stream"]
 
     data = json.dumps(body).encode("utf‑8")
     req = urllib.request.Request(
@@ -65,6 +86,22 @@ def chat_stream(messages,
             "Authorization": "Bearer {}".format(token),
         },
     )
+
+    if not stream:
+        resp = urllib.request.urlopen(req)
+        resp = [json.loads(str(r.decode("utf‑8").strip())) for r in resp][0]
+        m = resp["choices"][0]["message"]
+        if "reasoning_content" in m:
+            yield (True, m["reasoning_content"])
+        if "content" in m:
+            yield (False, m["content"])
+        if "timings" in resp:
+            t = resp["timings"]
+            yield (t["cache_n"],
+                   t["prompt_n"],
+                   t["prompt_per_second"],
+                   t["predicted_per_second"])
+        return
 
     with urllib.request.urlopen(req) as resp:
         for raw in resp:
@@ -97,24 +134,19 @@ def chat_stream(messages,
                            t["predicted_per_second"])
                     if choice.get("finish_reason") == "stop":
                         return
-# Actual raw message data at end:
-# b'data: {"choices":[{"finish_reason":null,"index":0,"delta":{"content":"!"}}],"created":1762670015,"id":"chatcmpl-mHDb1kfAQIhcvp8kkPeWJsO8gpTIUA3a","model":"gpt-oss","system_fingerprint":"b6925-cd5e3b575","object":"chat.completion.chunk"}\n'
-# b'\n'
-# b'data: {"choices":[{"finish_reason":"stop","index":0,"delta":{}}],"created":1762670015,"id":"chatcmpl-mHDb1kfAQIhcvp8kkPeWJsO8gpTIUA3a","model":"gpt-oss","system_fingerprint":"b6925-cd5e3b575","object":"chat.completion.chunk","timings":{"cache_n":89,"prompt_n":58,"prompt_ms":23.467,"prompt_per_token_ms":0.40460344827586203,"prompt_per_second":2471.5558017641797,"predicted_n":2188,"predicted_ms":13095.01,"predicted_per_token_ms":5.984922303473492,"predicted_per_second":167.0865467074863}}\n'
-# b'\n'
-# b'data: [DONE]\n'
 
 
-# --------------------------------------------------------------------
-# 2)  Background worker – streams into the view
-# --------------------------------------------------------------------
 class StreamingTask(threading.Thread):
-    def __init__(self, view, messages, registry):
+    """Background worker – streams into the view"""
+
+    def __init__(self, view, messages, model, registry):
         super().__init__(daemon=True)
         self.view = view
         self.messages = messages
         self.registry = registry
         self._cancel = False
+        self.show_reasoning = sublime.load_settings(
+            "agentic.sublime-settings").get("show_reasoning")
 
     def cancel(self):
         self._cancel = True
@@ -124,7 +156,7 @@ class StreamingTask(threading.Thread):
         sublime.status_message("Streaming")
         prev_reasoning = False
 
-        self._write("\n# --- Agent ---\n")
+        self._write("\n\n# --- Agent ---\n")
         sublime.set_timeout(
             lambda: self.view.run_command(
                 "move_to", {"to": "eof", "extend": False}), 0)
@@ -132,10 +164,10 @@ class StreamingTask(threading.Thread):
         if self.view.settings().get("agent_model") is None:
             self.view.settings().set(
                 "agent_model",
-                random.choice(list(MODELS_HIGH.values()))
+                _pick_model()
             )
 
-        for chunk in chat_stream(
+        for chunk in _chat_stream(
                 self.messages,
                 self.view.settings().get("agent_model")):
             # Normal (2‑tuple) chunk vs. metrics (4‑tuple)
@@ -152,13 +184,15 @@ class StreamingTask(threading.Thread):
                 break
 
             if is_reasoning:
+                if not self.show_reasoning:
+                    continue
                 if not prev_reasoning:  # first reasoning message
                     self._write("\n## --- Thinking ---\n>")
                     prev_reasoning = True
                 text = text.replace("\n", "\n> ")
             else:
                 if prev_reasoning:
-                    self._write("\n## --- Response ---\n")
+                    self._write("\n\n## --- Response ---\n")
                     prev_reasoning = False
 
             self._write(text)
@@ -175,24 +209,20 @@ class StreamingTask(threading.Thread):
         if not self.view.is_valid():
             return
         self.registry.pop(self.view.id(), None)
-        self._write("\n# --- User ---\n")
+        self._write("\n\n# --- User ---\n")
         self.view.settings().set("is_streaming", False)
 
 
-# --------------------------------------------------------------------
-# 3)  Public helper – start a streaming task on a view
-# --------------------------------------------------------------------
-def start_streaming(view, messages):
+def start_streaming(view, messages, model=None):
+    """Public helper – start a streaming task on a view"""
     view.settings().set("is_streaming", True)
-    task = StreamingTask(view, messages, _ACTIVE_STREAMERS)
+    task = StreamingTask(view, messages, model, _ACTIVE_STREAMERS)
     _ACTIVE_STREAMERS[view.id()] = task
     task.start()
 
 
-# --------------------------------------------------------------------
-# 4)  Parse a view into a list of chat messages
-# --------------------------------------------------------------------
-def build_messages_from_text(text):
+def _build_messages_from_text(text):
+    """Parse a view into a list of chat messages"""
     lines = text.splitlines(True)
 
     messages = []
@@ -242,11 +272,19 @@ def build_messages_from_text(text):
 
     return messages
 
+def _rebuild_text(messages):
+    parts = []
+    for m in messages:
+        tag = tag_map.get(m["role"])
+        if not tag:
+            continue
+        parts.append("{}\n{}\n".format(tag, m["content"].strip()))
+    return "\n".join(parts)[:-1]
 
-# --------------------------------------------------------------------
-# 5)  Input handler – free‑form prompt for AiAgentCodeCommand
-# --------------------------------------------------------------------
+
 class PromptInputHandler(sublime_plugin.TextInputHandler):
+    """Input handler – free‑form prompt for AiAgentCodeCommand"""
+
     def placeholder(self):
         return "Enter command string"
 
@@ -254,10 +292,9 @@ class PromptInputHandler(sublime_plugin.TextInputHandler):
         return ""
 
 
-# --------------------------------------------------------------------
-# 6)  AiAgentCodeCommand – create a new window and stream
-# --------------------------------------------------------------------
 class AgentCodeCommand(sublime_plugin.WindowCommand):
+    """Start a new chat based on highlighted text"""
+
     def input(self, args):
         return PromptInputHandler()
 
@@ -286,21 +323,21 @@ class AgentCodeCommand(sublime_plugin.WindowCommand):
             old_view.file_name(), content, prompt)
 
         # Write system & user prompts to the new view
-        new_chat = "# --- System ---\n{}\n# --- User ---\n{}\n".format(
-            SYSTEM_PROMPT, user_prompt
+        new_chat = "# --- System ---\n\n{}\n# --- User ---\n{}\n".format(
+            sublime.load_settings("agentic.sublime-settings").get("default_prompt"),
+            user_prompt
         )
         view.run_command("append", {"characters": new_chat})
-        messages = build_messages_from_text(new_chat)
+        messages = _build_messages_from_text(new_chat)
 
         # Start streaming
         start_streaming(view, messages)
         sublime.status_message("Submitting prompt")
 
 
-# --------------------------------------------------------------------
-# 7)  AgentChatCommand – stream on an existing chat view
-# --------------------------------------------------------------------
 class AgentChatCommand(sublime_plugin.WindowCommand):
+    """Interact with an existing chat file"""
+
     def run(self):
         view = self.window.active_view()
         if not view:
@@ -314,20 +351,10 @@ class AgentChatCommand(sublime_plugin.WindowCommand):
             return
 
         text = view.substr(sublime.Region(0, view.size()))
-        messages = build_messages_from_text(text)
+        messages = _build_messages_from_text(text)
         if not messages:
             sublime.status_message("Chat data not found")
-            # make new file
-            view = self.window.new_file()
-            view.set_name("Chat")
-            new_chat = "# --- System ---\n{}\n# --- User ---\n".format(
-                SYSTEM_PROMPT
-            )
-            view.run_command("append", {"characters": new_chat})
-            view.run_command("move_to", {"to": "eof", "extend": False})
-            view.settings().set("is_streaming", False)
-            view.settings().set("is_agent_chat", True)
-            view.set_syntax_file("Packages/Markdown/Markdown.sublime-syntax")
+            self.window.run_command("agent_new_chat")
             return
 
         view.settings().set("is_streaming", True)
@@ -341,10 +368,78 @@ class AgentChatCommand(sublime_plugin.WindowCommand):
         sublime.status_message("Submitting prompt")
 
 
-# --------------------------------------------------------------------
-# 8)  Cancel stream command
-# --------------------------------------------------------------------
+class AgentNewChatCommand(sublime_plugin.WindowCommand):
+    """Open a new chat window"""
+
+    def run(self):
+        view = self.window.active_view()
+        if not view:
+            return
+
+        view = self.window.new_file()
+        # view.set_scratch(True)  # if we make a new chat, save it by default.
+        view.set_name("Chat")
+        view.settings().set("is_streaming", False)
+        view.settings().set("is_agent_chat", True)
+
+        try:
+            view.set_syntax_file("Packages/Markdown/Markdown.sublime-syntax")
+        except Exception:
+            pass
+
+        view.set_name("Chat")
+        new_chat = "# --- System ---\n{}\n\n# --- User ---\n".format(
+            sublime.load_settings("agentic.sublime-settings").get("default_prompt")
+        )
+        view.run_command("append", {"characters": new_chat})
+        view.run_command("move_to", {"to": "eof", "extend": False})
+        return
+
+
+class AgentCloneChatCommand(sublime_plugin.WindowCommand):
+    """Create a new chat from an existing one"""
+
+    def run(self):
+        view = self.window.active_view()
+        if not view:
+            return
+
+        text = view.substr(sublime.Region(0, view.size()))
+        messages = _build_messages_from_text(text)
+
+        if messages is None:
+            sublime.status_message("Chat data not found")
+            self.window.run_command("agent_new_chat")
+            return
+
+        view = self.window.new_file()
+        view.set_name("Chat")
+        view.settings().set("is_streaming", False)
+        view.settings().set("is_agent_chat", True)
+        try:
+            view.set_syntax_file("Packages/Markdown/Markdown.sublime-syntax")
+        except Exception:
+            pass
+
+        parts = []
+        for msg in messages:
+            tag = TAG_MAP.get(msg["role"], None)
+            if tag is None:
+                continue
+            parts.append("{}\n{}\n".format(tag, msg["content"].strip()))
+
+        # remove empty/in-progress assistant
+        if parts[-1].startswith(TAG_MAP["assistant"]) and len(parts[-1]) < 19:
+            parts = parts[:-1]
+
+        cleaned = "\n".join(parts)[:-1]
+        view.run_command("append", {"characters": cleaned})
+        view.run_command("move_to", {"to": "eof", "extend": False})
+
+
 class CancelStreamCommand(sublime_plugin.WindowCommand):
+    """Cancel an active stream command"""
+
     def run(self):
         view = self.window.active_view()
         if not view or not view.settings().get("is_streaming"):
@@ -357,32 +452,105 @@ class CancelStreamCommand(sublime_plugin.WindowCommand):
             view.settings().set("is_streaming", False)
 
 
-# --------------------------------------------------------------------
-# 9)  Clear reasoning sections from a finished chat
-# --------------------------------------------------------------------
 class AgentClearReasoningCommand(sublime_plugin.TextCommand):
+    """Clear reasoning sections from a finished chat"""
+
     def run(self, edit):
         view = self.view
         if view.id() in _ACTIVE_STREAMERS:
             return
 
         text = view.substr(sublime.Region(0, view.size()))
-        messages = build_messages_from_text(text)
+        messages = _build_messages_from_text(text)
         if not messages:
             sublime.status_message("Chat data not found")
             return
 
-        tag_map = {
-            "developer": "# --- System ---",
-            "user": "# --- User ---",
-            "assistant": "# --- Agent ---",
-        }
-
         parts = []
         for msg in messages:
-            tag = tag_map.get(msg["role"], "# --- Unknown ---")
-            parts.append("{}\n{}\n".format(tag, msg["content"]))
+            tag = TAG_MAP.get(msg["role"], None)
+            if tag is None:
+                continue
+            parts.append("{}\n{}\n".format(tag, msg["content"].strip()))
 
-        cleaned = "\n".join(parts)
+        cleaned = "\n".join(parts)[:-1]
         view.replace(edit, sublime.Region(0, view.size()), cleaned)
-        sublime.status_message("Chat cleared")
+        sublime.status_message("Chat reasoning cleared")
+
+
+class AgentActionCommand(sublime_plugin.WindowCommand):
+    """Run a user-defined action:
+    e.g. { "models": "models_high",
+           "system": "You are an expert.",
+           "prompt": "Turn this code into haiku." }
+    """
+
+    def run(self):
+        self.actions = self._load_actions()
+        if not self.actions:
+            sublime.error_message(
+                "agentic.sublime-settings contains no actions.\n"
+                'Add a JSON array under the key `"actions"`.'
+            )
+            return
+
+        self.window.show_quick_panel(
+            list(self.actions.keys()),
+            self.run_action  # callback called with the index chosen by the user
+        )
+
+    # ----------  Callback ----------
+    def run_action(self, index):
+        """Called when the user picks an item (or cancels)."""
+
+        ## 1. Load selected prompt to use for action
+        if index == -1:  # user pressed Escape
+            return
+        action_name = list(self.actions.keys())[index]
+        chosen = self.actions[action_name]
+        settings = sublime.load_settings("agentic.sublime-settings")
+        models_list = chosen["models"]
+        system_prompt = chosen["system"]
+        prompt = chosen["prompt"]
+
+        # 2. new window + scratch view
+        old_view = self.window.active_view()
+        view = self.window.new_file()
+        # Origami:
+        self.window.run_command("create_pane_with_file", {"direction": "right"})
+
+        view.set_scratch(True)
+        view.set_name("Chat " + action_name[:12])
+        view.settings().set("is_streaming", True)
+        view.settings().set("is_agent_chat", True)
+        try:
+            view.set_syntax_file("Packages/Markdown/Markdown.sublime-syntax")
+        except Exception:
+            pass
+
+        # 3. Load selected text
+        sel = old_view.sel()  # store user highlighted (if any)
+        if any(not r.empty() for r in sel):  # join multiple selections
+            content = "\n...\n".join(old_view.substr(r)
+                                     for r in sel if not r.empty())
+        else:  # grab entire file
+            content = old_view.substr(sublime.Region(0, old_view.size()))
+        user_prompt = "File: {}\n```\n{}\n```\n{}".format(
+            old_view.file_name(), content, prompt)
+
+        # 4. Write system & user prompts and prepare message
+        new_chat = "# --- System ---\n\n{}\n# --- User ---\n{}\n".format(
+            system_prompt,
+            user_prompt
+        )
+        view.run_command("append", {"characters": new_chat})
+        messages = _build_messages_from_text(new_chat)
+
+        # 5. Call LLM
+        model = _pick_model(models_list)
+        start_streaming(view, messages, model)
+        sublime.status_message("Submitting prompt")
+
+    def _load_actions(self):
+        return sublime.load_settings("agentic.sublime-settings").get("actions")
+

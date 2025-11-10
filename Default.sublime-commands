@@ -4,8 +4,16 @@
         "command": "agent_code"
     },
     {
-        "caption": "AI Agent Chat",
-        "command": "agent_chat"
+        "caption": "AI Agent Action",
+        "command": "agent_action"
+    },
+    {
+        "caption": "AI Agent New Chat",
+        "command": "agent_new_chat"
+    },
+    {
+        "caption": "AI Agent Clone Chat",
+        "command": "agent_clone_chat"
     },
     {
         "caption": "AI Agent Clear Reasoning",
