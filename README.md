@@ -7,7 +7,7 @@ Sublime breathes code,
 Agents speak in marked whispers,  
 Chats rise, fall, then rest.
 ```
-*~GPT-OSS-20b on Agentic/chat_stream.py with using the "haiku" action*
+*~GPT-OSS-20b on Agentic/chat_stream.py using the "haiku" action*
 
 This is a plugin that lets you run models over OpenAI-style chat completion APIs, tested with `llama-server`. You can use this plugin to send code snippets or files and get LLM results directly in Sublime Text. Chatting is supported through a simple markdown text file interface with hotkeys (`[ctrl/cmd]+[enter]`, `[esc]/[c]`). There is also support to easily build custom agent actions that you can quickly access from the command palette.
 
@@ -18,7 +18,7 @@ This is a plugin that lets you run models over OpenAI-style chat completion APIs
 **Define and quickly launch custom actions on code sections or whole files with `AI Agent Actions`:**
 ![Define and Run Custom Actions](pics/custom_actions.png)
 
-**Fast and streamlined interactive markdown chat interface with fully editable history:**
+**Fast and streamlined interactive markdown chat interface with fully editable history and prompts:**
 ![Markdown-formatted Documents are used for LLM Chat](pics/markdown_chat.png)
 
 ### Usage 🛠
@@ -166,7 +166,7 @@ CUDA_VISIBLE_DEVICES='' llama-server -fa on -ctk q8_0 -ctv q8_0 -m ~/models/gpt-
 ```
 
 ### 4. Connect
-Now you should be able to automatically connect and run Agent commands, or you can update your configuration.
+Now you should be able to automatically connect and run Agent commands, or you can update your model configurations to match your local deployment.
 
 run the `AI Agent Settings` command, or go to `Preferences > Package Settings > Agentic > Settings` to modify your llm configuration.
 
