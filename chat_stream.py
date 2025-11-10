@@ -214,12 +214,14 @@ class AgentStreamingTask(threading.Thread):
         self._write("\n\n# --- User ---\n")
         self.view.settings().set("is_streaming", False)
 
+
 def start_streaming(view, messages, model=None):
     """Public helper – start a streaming task on a view"""
     view.settings().set("is_streaming", True)
     task = AgentStreamingTask(view, messages, model, _ACTIVE_STREAMERS)
     _ACTIVE_STREAMERS[view.id()] = task
     task.start()
+
 
 def _build_messages_from_text(text):
     """Parse a view into a list of chat messages"""
@@ -272,6 +274,7 @@ def _build_messages_from_text(text):
 
     return messages
 
+
 def _rebuild_text(messages, strip_active=False):
     """Reconstructs chat text from message list"""
     if not messages:
@@ -287,11 +290,22 @@ def _rebuild_text(messages, strip_active=False):
         parts = parts[:-1]
     return "\n".join(parts)[:-1]
 
+
 def _create_chat(window, name, initial="",
-         temporary=True, create_pane=True, pane_dir="right"):
+                 temporary=True, create_pane=True, pane_dir="right"):
     view = window.new_file()
-    if create_pane: # Origami:
-        window.run_command("create_pane_with_file", {"direction": pane_dir})
+    if create_pane:
+        window.set_layout({
+            "cols":  [0.0, 0.5, 1.0],
+            "rows":  [0.0, 1.0],
+            "cells": [[0, 0, 1, 1],  # left group
+                      [1, 0, 2, 1]]  # right group
+        })
+        right_group = window.num_groups() - 1
+        window.set_view_index(view, right_group, 0)  # move file
+        window.focus_group(right_group)
+        # # Origami:
+        # window.run_command("create_pane_with_file", {"direction": pane_dir})
     if temporary:
         view.set_scratch(True)
     view.set_name(name)
@@ -303,6 +317,7 @@ def _create_chat(window, name, initial="",
             lambda: view.run_command("move_to", {"to": "eof", "extend": False}),
             0)
     return view
+
 
 def _read_selection(view):
     """Load user-selected data or file"""

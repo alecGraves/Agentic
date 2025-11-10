@@ -1,8 +1,7 @@
 # Agentic – LLM Agents for Sublime Text 🤖
-* A lightweight Sublime Text plugin that lets you chat with, or command, multiple local or remote LLMs concurrently.
+A lightweight Sublime Text plugin that lets you command multiple local or remote LLMs concurrently.
 
 ## Introduction 🖊
-
 ```
 Sublime breathes code,  
 Agents speak in marked whispers,  
@@ -25,10 +24,7 @@ For configuration, there is a convenience command:
 - `AI Agent Configure` which will copy and open your configuration file.
 
 ## Installation 📂
-* This plugin works better with [Origami](https://packagecontrol.io/packages/Origami) - install it for automatic side-by-side window creation.
-
 You can install this plugin by copying its contents to your `Packages` folder:
-
 ```cmd
 cd "%APPDATA%\Sublime Text\Packages"               # on Windows
 cd ~/Library/Application\ Support/Sublime\ Text    # on Mac
@@ -36,6 +32,8 @@ cd ~/.config/sublime-text/Packages                 # on Linux
 
 git clone https://git.sr.ht/~alecgraves/agentic-sublime
 ```
+
+* This plugin works better with [Origami](https://github.com/SublimeText/Origami)
 
 ## LLM Model Installation and Running 🚀
 
@@ -81,7 +79,6 @@ make -C build -j $(nproc) llama-server
 ```
 
 AMDGPU (ROCm) (shell):
-
 ```sh
 HIPCXX="$(hipconfig -l)/clang" HIP_PATH="$(hipconfig -R)" \
     cmake -S . -B build -DGGML_HIP=ON -DLLAMA_CURL=OFF -DAMDGPU_TARGETS=gfx1200 -DCMAKE_BUILD_TYPE=Release \
