@@ -8,6 +8,10 @@
         "command": "agent_action"
     },
     {
+        "caption": "AI Agent Chat Submit",
+        "command": "agent_chat"
+    },
+    {
         "caption": "AI Agent New Chat",
         "command": "agent_new_chat"
     },
@@ -18,5 +22,14 @@
     {
         "caption": "AI Agent Clear Reasoning",
         "command": "agent_clear_reasoning"
+    },
+    {
+        "caption": "AI Agent Settings",
+        "command": "edit_settings",
+        "args": {
+          "base_file": "${packages}/Agentic/Agentic.sublime-settings",
+          "user_file": "${packages}/User/Agentic.sublime-settings",
+          "default": "{\n\t$0\n}"
+        }
     },
 ]

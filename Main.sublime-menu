@@ -1,0 +1,47 @@
+[
+  {
+    "caption": "Preferences",
+    "mnemonic": "n",
+    "id": "preferences",
+    "children": [
+      {
+        "caption": "Package Settings",
+        "mnemonic": "P",
+        "id": "package-settings",
+        "children": [
+          {
+            "caption": "Agentic",
+            "children": [
+              {
+                "caption": "Settings",
+                "command": "edit_settings",
+                "args": {
+                  "base_file": "${packages}/Agentic/Agentic.sublime-settings",
+                  "user_file": "${packages}/User/Agentic.sublime-settings",
+                  "default": "{\n\t$0\n}"
+                }
+              },
+              {
+                "caption": "Key Bindings",
+                "command": "edit_settings",
+                "args": {
+                  "base_file": "${packages}/Agentic/Default ($platform).sublime-keymap",
+                  "user_file": "${packages}/User/Default (${platform}).sublime-keymap",
+                  "default": "[\n\t$0\n]\n"
+                }
+              },
+              { "caption": "-" },
+              {
+                "caption": "README",
+                "command": "open_file",
+                "args": {
+                  "file": "${packages}/Agentic/README.md"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

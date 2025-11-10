@@ -21,7 +21,7 @@
 #
 #  * AI Agent New Chat    – Prepare a new chat file
 #
-#  All API call logic lives in `_chat_stream()` – the single code
+#  All API call logic lives in `chat_stream()` – the single code
 #  path used by all three commands.
 #
 #  The plugin uses only Python features available in older
@@ -51,7 +51,7 @@ TAG_MAP = {
 
 def _pick_model(capability=None):
     """Return a random model from the provided model list string"""
-    settings = sublime.load_settings("agentic.sublime-settings")
+    settings = sublime.load_settings("Agentic.sublime-settings")
     if capability is None:
         capability = settings.get("default_models")
     capable_models = settings.get(capability)
@@ -61,7 +61,7 @@ def _pick_model(capability=None):
     return model
 
 
-def _chat_stream(messages, model):
+def chat_stream(messages, model):
     """
     Query an OpenAI server given messages and a model configuration.
     Yields `(is_reasoning, text)` for incremental stream chunks.
@@ -136,7 +136,7 @@ def _chat_stream(messages, model):
                         return
 
 
-class StreamingTask(threading.Thread):
+class AgentStreamingTask(threading.Thread):
     """Background worker – streams into the view"""
 
     def __init__(self, view, messages, model, registry):
@@ -145,8 +145,10 @@ class StreamingTask(threading.Thread):
         self.messages = messages
         self.registry = registry
         self._cancel = False
+        if model:
+            self.view.settings().set("agent_model", model)
         self.show_reasoning = sublime.load_settings(
-            "agentic.sublime-settings").get("show_reasoning")
+            "Agentic.sublime-settings").get("show_reasoning")
 
     def cancel(self):
         self._cancel = True
@@ -167,7 +169,7 @@ class StreamingTask(threading.Thread):
                 _pick_model()
             )
 
-        for chunk in _chat_stream(
+        for chunk in chat_stream(
                 self.messages,
                 self.view.settings().get("agent_model")):
             # Normal (2‑tuple) chunk vs. metrics (4‑tuple)
@@ -212,14 +214,12 @@ class StreamingTask(threading.Thread):
         self._write("\n\n# --- User ---\n")
         self.view.settings().set("is_streaming", False)
 
-
 def start_streaming(view, messages, model=None):
     """Public helper – start a streaming task on a view"""
     view.settings().set("is_streaming", True)
-    task = StreamingTask(view, messages, model, _ACTIVE_STREAMERS)
+    task = AgentStreamingTask(view, messages, model, _ACTIVE_STREAMERS)
     _ACTIVE_STREAMERS[view.id()] = task
     task.start()
-
 
 def _build_messages_from_text(text):
     """Parse a view into a list of chat messages"""
@@ -272,18 +272,51 @@ def _build_messages_from_text(text):
 
     return messages
 
-def _rebuild_text(messages):
+def _rebuild_text(messages, strip_active=False):
+    """Reconstructs chat text from message list"""
+    if not messages:
+        return ""
     parts = []
     for m in messages:
-        tag = tag_map.get(m["role"])
+        tag = TAG_MAP.get(m["role"])
         if not tag:
             continue
         parts.append("{}\n{}\n".format(tag, m["content"].strip()))
+    if strip_active and parts[-1].startswith(TAG_MAP["assistant"]) \
+            and len(parts[-1]) < 19:
+        parts = parts[:-1]
     return "\n".join(parts)[:-1]
+
+def _create_chat(window, name, initial="",
+         temporary=True, create_pane=True, pane_dir="right"):
+    view = window.new_file()
+    if create_pane: # Origami:
+        window.run_command("create_pane_with_file", {"direction": pane_dir})
+    if temporary:
+        view.set_scratch(True)
+    view.set_name(name)
+    view.settings().set("is_agent_chat", True)
+    view.set_syntax_file("Packages/Markdown/Markdown.sublime-syntax")
+    if initial:
+        view.run_command("append", {"characters": initial})
+        sublime.set_timeout(
+            lambda: view.run_command("move_to", {"to": "eof", "extend": False}),
+            0)
+    return view
+
+def _read_selection(view):
+    """Load user-selected data or file"""
+    sel = view.sel()
+    if any(not r.empty() for r in sel):
+        content = "\n...\n".join(view.substr(r)
+                                 for r in sel if not r.empty())
+    else:  # load entire file:
+        content = view.substr(sublime.Region(0, view.size()))
+    return content
 
 
 class PromptInputHandler(sublime_plugin.TextInputHandler):
-    """Input handler – free‑form prompt for AiAgentCodeCommand"""
+    """Input handler – free‑form prompt for AgentCodeCommand"""
 
     def placeholder(self):
         return "Enter command string"
@@ -294,50 +327,33 @@ class PromptInputHandler(sublime_plugin.TextInputHandler):
 
 class AgentCodeCommand(sublime_plugin.WindowCommand):
     """Start a new chat based on highlighted text"""
-
     def input(self, args):
         return PromptInputHandler()
 
     def run(self, prompt):
         # New window + scratch view
-        old_view = self.window.active_view()
-        view = self.window.new_file()
-        # Origami:
-        self.window.run_command("create_pane_with_file", {"direction": "right"})
-        view.set_scratch(True)
-        view.set_name("Chat " + prompt[:12])
-        view.settings().set("is_streaming", True)
-        view.settings().set("is_agent_chat", True)
-        try:
-            view.set_syntax_file("Packages/Markdown/Markdown.sublime-syntax")
-        except Exception:
-            pass
+        old = self.window.active_view()
 
-        sel = old_view.sel()
-        if any(not r.empty() for r in sel):
-            content = "\n...\n".join(old_view.substr(r)
-                                     for r in sel if not r.empty())
-        else:
-            content = old_view.substr(sublime.Region(0, old_view.size()))
+        content = _read_selection(old)
         user_prompt = "File: {}\n```\n{}\n```\n{}".format(
-            old_view.file_name(), content, prompt)
-
-        # Write system & user prompts to the new view
-        new_chat = "# --- System ---\n\n{}\n# --- User ---\n{}\n".format(
-            sublime.load_settings("agentic.sublime-settings").get("default_prompt"),
+            old.file_name(), content, prompt)
+        new_chat = "# --- System ---\n{}\n\n# --- User ---\n{}\n".format(
+            sublime.load_settings("Agentic.sublime-settings").get("default_prompt"),
             user_prompt
         )
-        view.run_command("append", {"characters": new_chat})
+
+        view = _create_chat(self.window, "Chat " + prompt[:12],
+                            initial=new_chat)
+
         messages = _build_messages_from_text(new_chat)
 
-        # Start streaming
+        # Start agent
         start_streaming(view, messages)
         sublime.status_message("Submitting prompt")
 
 
 class AgentChatCommand(sublime_plugin.WindowCommand):
     """Interact with an existing chat file"""
-
     def run(self):
         view = self.window.active_view()
         if not view:
@@ -359,10 +375,7 @@ class AgentChatCommand(sublime_plugin.WindowCommand):
 
         view.settings().set("is_streaming", True)
         view.settings().set("is_agent_chat", True)
-        try:
-            view.set_syntax_file("Packages/Markdown/Markdown.sublime-syntax")
-        except Exception:
-            pass
+        view.set_syntax_file("Packages/Markdown/Markdown.sublime-syntax")
 
         start_streaming(view, messages)
         sublime.status_message("Submitting prompt")
@@ -370,76 +383,33 @@ class AgentChatCommand(sublime_plugin.WindowCommand):
 
 class AgentNewChatCommand(sublime_plugin.WindowCommand):
     """Open a new chat window"""
-
     def run(self):
-        view = self.window.active_view()
-        if not view:
+        if not self.window.active_view():
             return
-
-        view = self.window.new_file()
-        # view.set_scratch(True)  # if we make a new chat, save it by default.
-        view.set_name("Chat")
-        view.settings().set("is_streaming", False)
-        view.settings().set("is_agent_chat", True)
-
-        try:
-            view.set_syntax_file("Packages/Markdown/Markdown.sublime-syntax")
-        except Exception:
-            pass
-
-        view.set_name("Chat")
         new_chat = "# --- System ---\n{}\n\n# --- User ---\n".format(
-            sublime.load_settings("agentic.sublime-settings").get("default_prompt")
+            sublime.load_settings("Agentic.sublime-settings").get("default_prompt")
         )
-        view.run_command("append", {"characters": new_chat})
-        view.run_command("move_to", {"to": "eof", "extend": False})
-        return
+        view = _create_chat(self.window, "Chat", new_chat, create_pane=False)
 
 
 class AgentCloneChatCommand(sublime_plugin.WindowCommand):
     """Create a new chat from an existing one"""
-
     def run(self):
         view = self.window.active_view()
         if not view:
             return
-
         text = view.substr(sublime.Region(0, view.size()))
         messages = _build_messages_from_text(text)
-
-        if messages is None:
+        if not messages:
             sublime.status_message("Chat data not found")
             self.window.run_command("agent_new_chat")
             return
-
-        view = self.window.new_file()
-        view.set_name("Chat")
-        view.settings().set("is_streaming", False)
-        view.settings().set("is_agent_chat", True)
-        try:
-            view.set_syntax_file("Packages/Markdown/Markdown.sublime-syntax")
-        except Exception:
-            pass
-
-        parts = []
-        for msg in messages:
-            tag = TAG_MAP.get(msg["role"], None)
-            if tag is None:
-                continue
-            parts.append("{}\n{}\n".format(tag, msg["content"].strip()))
-
-        # remove empty/in-progress assistant
-        if parts[-1].startswith(TAG_MAP["assistant"]) and len(parts[-1]) < 19:
-            parts = parts[:-1]
-
-        cleaned = "\n".join(parts)[:-1]
-        view.run_command("append", {"characters": cleaned})
-        view.run_command("move_to", {"to": "eof", "extend": False})
+        cleaned = _rebuild_text(messages, strip_active=True)
+        view = _create_chat(self.window, "Chat", cleaned, create_pane=False)
 
 
 class CancelStreamCommand(sublime_plugin.WindowCommand):
     """Cancel an active stream command"""
-
     def run(self):
         view = self.window.active_view()
         if not view or not view.settings().get("is_streaming"):
@@ -454,42 +424,27 @@ class CancelStreamCommand(sublime_plugin.WindowCommand):
 
 class AgentClearReasoningCommand(sublime_plugin.TextCommand):
     """Clear reasoning sections from a finished chat"""
-
     def run(self, edit):
         view = self.view
         if view.id() in _ACTIVE_STREAMERS:
             return
-
         text = view.substr(sublime.Region(0, view.size()))
         messages = _build_messages_from_text(text)
         if not messages:
             sublime.status_message("Chat data not found")
             return
-
-        parts = []
-        for msg in messages:
-            tag = TAG_MAP.get(msg["role"], None)
-            if tag is None:
-                continue
-            parts.append("{}\n{}\n".format(tag, msg["content"].strip()))
-
-        cleaned = "\n".join(parts)[:-1]
+        cleaned = _rebuild_text(messages)
         view.replace(edit, sublime.Region(0, view.size()), cleaned)
         sublime.status_message("Chat reasoning cleared")
 
 
 class AgentActionCommand(sublime_plugin.WindowCommand):
-    """Run a user-defined action:
-    e.g. { "models": "models_high",
-           "system": "You are an expert.",
-           "prompt": "Turn this code into haiku." }
-    """
-
+    """Run a user-defined action - see Agentic.sublime-settings"""
     def run(self):
         self.actions = self._load_actions()
         if not self.actions:
             sublime.error_message(
-                "agentic.sublime-settings contains no actions.\n"
+                "Agentic.sublime-settings contains no actions.\n"
                 'Add a JSON array under the key `"actions"`.'
             )
             return
@@ -499,58 +454,30 @@ class AgentActionCommand(sublime_plugin.WindowCommand):
             self.run_action  # callback called with the index chosen by the user
         )
 
-    # ----------  Callback ----------
     def run_action(self, index):
         """Called when the user picks an item (or cancels)."""
-
-        ## 1. Load selected prompt to use for action
         if index == -1:  # user pressed Escape
             return
         action_name = list(self.actions.keys())[index]
         chosen = self.actions[action_name]
-        settings = sublime.load_settings("agentic.sublime-settings")
+        settings = sublime.load_settings("Agentic.sublime-settings")
         models_list = chosen["models"]
         system_prompt = chosen["system"]
         prompt = chosen["prompt"]
 
-        # 2. new window + scratch view
-        old_view = self.window.active_view()
-        view = self.window.new_file()
-        # Origami:
-        self.window.run_command("create_pane_with_file", {"direction": "right"})
-
-        view.set_scratch(True)
-        view.set_name("Chat " + action_name[:12])
-        view.settings().set("is_streaming", True)
-        view.settings().set("is_agent_chat", True)
-        try:
-            view.set_syntax_file("Packages/Markdown/Markdown.sublime-syntax")
-        except Exception:
-            pass
-
-        # 3. Load selected text
-        sel = old_view.sel()  # store user highlighted (if any)
-        if any(not r.empty() for r in sel):  # join multiple selections
-            content = "\n...\n".join(old_view.substr(r)
-                                     for r in sel if not r.empty())
-        else:  # grab entire file
-            content = old_view.substr(sublime.Region(0, old_view.size()))
+        old = self.window.active_view()
+        content = _read_selection(old)
         user_prompt = "File: {}\n```\n{}\n```\n{}".format(
-            old_view.file_name(), content, prompt)
+            old.file_name(), content, prompt)
+        new_chat = "# --- System ---\n{}\n\n# --- User ---\n{}\n".format(
+            system_prompt, user_prompt)
 
-        # 4. Write system & user prompts and prepare message
-        new_chat = "# --- System ---\n\n{}\n# --- User ---\n{}\n".format(
-            system_prompt,
-            user_prompt
-        )
-        view.run_command("append", {"characters": new_chat})
+        view = _create_chat(self.window, "Chat " + action_name[:12], new_chat)
+
         messages = _build_messages_from_text(new_chat)
-
-        # 5. Call LLM
         model = _pick_model(models_list)
         start_streaming(view, messages, model)
         sublime.status_message("Submitting prompt")
 
     def _load_actions(self):
-        return sublime.load_settings("agentic.sublime-settings").get("actions")
-
+        return sublime.load_settings("Agentic.sublime-settings").get("actions")

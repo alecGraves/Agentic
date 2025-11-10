@@ -4,10 +4,16 @@
 	"default_models": "models_high",
 	"show_reasoning": true,
 
+	// Actions take the currently selected code (or entire file if no code is selected)
+	//  and send it to the LLM to evaluate with a custom prompt.
 	"actions": {
+		// Each action has a key word (which shows up in the menu):
 		"simplify": {
+			// name of list of models to use:
 			"models": "models_high",
+			// system prompt:
 			"system": "You are an expert programming agent. Make sure to never negatively impact the correctness or functionality of a program.",
+			// user prompt:
 			"prompt": "Analyze this code and simplify it as much as possible to improve conciseness and clarity. Ensure the code works, but please refactor it to be as minimal as possible to ensure performance and clarity."
 		},
 		"comment": {
@@ -19,7 +25,12 @@
 			"models": "models_high",
 			"system": "You are an expert programming agent. Make sure to carefully analyze the program line-by-line.",
 			"prompt": "This code contains a critical logic error that impacts the functionality. Please analyze this code line-by-line for correctness and make a list of any potential issues that you see in each section. Make sure to highlight any glaring mistakes that you can find."
-		}
+		},
+		"haiku": {
+			"models": "models_low", // Save the planet
+			"system": "You are an expert.",
+			"prompt": "Turn this into a haiku."
+		},
 	},
 
 	// These models are good for most programming tasks but can be slow:
@@ -36,24 +47,26 @@
 
 	// List of model configurations
 	"models": {
+		// Each model configuration is named, with params.
 		"ultra_1":
 		{
 			"url": "http://127.0.0.1:8081/v1/chat/completions",
-			"model": "gpt-oss-120b",
-			"token": "000000000000",
-			"options": {
+			"model": "gpt-oss-120b", // model to select
+			"token": "000000000000", // Token for OpenAI API
+			"options": { // (request API parameters here)
 				"stream": true,  // this is the only thing that works for now
-				"reasoning": {"effort":"high"},
+				// "reasoning": {"effort":"high"}, // e.g. OpenAI
+				"chat_template_kwargs": {"reasoning_effort": "high"},
 				"temperature": 1.0,
 				"top_p": 1.0,
 				"min_p": 0,
 				"top_k": 0
 			},
-			"context": 131072.0,
-			"system": "my_cpu1",
-			"workers": 1,
-			"speed": 20.0,
-			"effort": 32768.0
+			"context": 131072.0, // Max context length
+			"system": "my_cpu1", // Unique per-device id
+			"workers": 1,        // Number of concurrent chats supported
+			"speed": 20.0,       // Speed (tk/s for one chat)
+			"effort": 32768.0    // Approx number of outputs
 		},
 		"high_1":
 		{
@@ -62,7 +75,7 @@
 			"token": "000000000000",
 			"options": {
 				"stream": true,
-				"reasoning": {"effort":"high"},
+				"chat_template_kwargs": {"reasoning_effort": "high"},
 				"temperature": 1.0,
 				"top_p": 1.0,
 				"min_p": 0,
@@ -81,7 +94,7 @@
 			"token": "000000000000",
 			"options": {
 				"stream": true,
-				"reasoning": {"effort":"medium"},
+				"chat_template_kwargs": {"reasoning_effort": "medium"},
 				"temperature": 1.0,
 				"top_p": 1.0,
 				"min_p": 0,
@@ -100,7 +113,7 @@
 			"token": "000000000000",
 			"options": {
 				"stream": true,
-				"reasoning": {"effort":"low"},
+				"chat_template_kwargs": {"reasoning_effort": "low"},
 				"temperature": 1.0,
 				"top_p": 1.0,
 				"min_p": 0,
