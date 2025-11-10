@@ -21,7 +21,7 @@ There are also several supplemental pallet actions to help control chats
 - `AI Agent New Chat` - creates a new chat file
 
 For configuration, there is a convenience command:
-- `AI Agent Configure` which will copy and open your configuration file.
+- `AI Agent Settings` which will copy and open your configuration file.
 
 ## Installation 📂
 You can install this plugin by copying its contents to your `Packages` folder:
