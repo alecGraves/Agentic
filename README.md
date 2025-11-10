@@ -1,5 +1,5 @@
 # Agentic – LLM Agents for Sublime Text 🤖
-A lightweight Sublime Text plugin that lets you command multiple local or remote LLMs concurrently.
+A lightweight Sublime Text plugin that lets you concurrently command multiple local or remote LLMs.
 
 ## Introduction 🖊
 ```
