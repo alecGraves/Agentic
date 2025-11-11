@@ -91,7 +91,7 @@ Configuring user-defined actions (`AI Agent Settings` / `Agentic.sublime-setting
 "groq-oss-120":{
 	"url":"https://api.groq.com/openai/v1/chat/completions",
 	"model": "openai/gpt-oss-120b",
-	"token": "<REDACTED>",
+	"token": "<YOUR_GROQ_API_KEY>",
 	"options": {
 		"stream": true,
 		"reasoning_effort": "high",
@@ -108,12 +108,36 @@ Configuring user-defined actions (`AI Agent Settings` / `Agentic.sublime-setting
 },
 ```
 
+**Example [groq compound (mini)](https://console.groq.com/docs/compound) 💘**
+```json
+"groq-compound-mini":{
+	"url":"https://api.groq.com/openai/v1/chat/completions",
+	"model": "groq/compound-mini",
+	"token": "<YOUR_GROQ_API_KEY>",
+	"options": {
+		"stream": true,
+		"temperature": 1,
+		"top_p": 1,
+		"max_completion_tokens": 1024,
+		"compound_custom":{"tools":{"enabled_tools":
+			["code_interpreter","web_search","visit_website"]}}
+	},
+	"context": 131072,
+	"system": "groq",
+	"workers": 1000.0,
+	"speed": 450.0,
+	"effort": 32768.0,
+	"cost": 0.75, // per million tokens in+out
+},
+```
+* ^ This model is integrated with tools, enabling web search ([Tavily](https://www.tavily.com/)), single-page website download, and sandboxed cloud code evaluation, streamed directly back into Sublime Text.
+
 **Example Model configuration - Google (TPU) Gemini 2.5 Pro:** 🏋
 ```JSON
 "gemini-2.5-pro": {
 	"url":"https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
 	"model": "gemini-2.5-pro",
-	"token": "<REDACTED>",
+	"token": "<YOUR_GOOGLE_API_KEY>",
 	"options": {
 		"stream": true,
 		"reasoning_effort": "high"
@@ -132,7 +156,7 @@ Configuring user-defined actions (`AI Agent Settings` / `Agentic.sublime-setting
 "gpt-5":{
 	"url":"https://api.openai.com/v1/chat/completions",
 	"model": "gpt-5",
-	"token": "<REDACTED>",
+	"token": "<YOUR_OPENAI_API_KEY>",
 	"options": {
 		"stream": false,
 		"reasoning_effort": "high",
@@ -146,7 +170,7 @@ Configuring user-defined actions (`AI Agent Settings` / `Agentic.sublime-setting
 	"cost": 11.25
 },
 ```
-- (Note, for `gpt-5` and `gpt-5-mini`, `"stream": true` does not work unless you verify your ID. `gpt-5-nano` streaming always works though.)
+- ^ Note, for `gpt-5` and `gpt-5-mini`, `"stream": true` does not work unless you verify your ID. `gpt-5-nano` streaming always works though.
 
 ### Customizing user actions
 **Example "haiku" action:**
