@@ -86,7 +86,7 @@ A note on errors in your model configuration:
 
 Configuring user-defined actions (`AI Agent Settings` / `Agentic.sublime-settings`):
 
-**Example [groq](https://groq.com/) accelerator GPT-OSS-120B:** 🚀
+**Example [groq (LPU)](https://groq.com/) GPT-OSS-120B:** 🚀
 ```json
 "groq-oss-120":{
 	"url":"https://api.groq.com/openai/v1/chat/completions",
@@ -108,7 +108,7 @@ Configuring user-defined actions (`AI Agent Settings` / `Agentic.sublime-setting
 },
 ```
 
-**Example Model configuration - Google TPU Gemini 2.5 Pro:** 🏋
+**Example Model configuration - Google (TPU) Gemini 2.5 Pro:** 🏋
 ```JSON
 "gemini-2.5-pro": {
 	"url":"https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
@@ -116,12 +116,13 @@ Configuring user-defined actions (`AI Agent Settings` / `Agentic.sublime-setting
 	"token": "<REDACTED>",
 	"options": {
 		"stream": true,
+		"reasoning_effort": "high"
 	},
 	"context": 1050000,
 	"system": "google",
 	"workers": 1000.0,
 	"speed": 79.94,
-	"effort": 16384.0,
+	"effort": 24576.0,
 	"cost": 11.25,
 },
 ```
