@@ -1,12 +1,15 @@
-# Packages/AgentChat/chat_plugin.py
+# Packages/Agentic/chat_stream.py
 # -------------------------------------------------------------
-#  Agentic AI plugin: three primary commands
+#  Agentic AI plugin: four primary commands
 #
 #  * AI Agent        – Execute an arbitrary prompt providing a code
 #                       snippet or file
 #
 #  * AI Agent Action – Execute user-defined custom agent action
 #                       on a custom code section.
+#
+#  * AI Agent Model Chat  – Start a chat with a specific model,
+#                            optionally with a code snippet
 #
 #  * AI Agent Chat   – Stream on an existing chat view that already
 #                       contains the tags "# --- System ---",
