@@ -3,15 +3,15 @@ A lightweight [Sublime Text](https://www.sublimetext.com/) plugin that lets you 
 
 ## Introduction 🖊
 ```
-Sublime breathes code,  
-Agents speak in marked whispers,  
+Sublime breathes code,
+Agents speak in marked whispers,
 Chats rise, fall, then rest.
 ```
 *~llama.cpp GPT-OSS-20b on Agentic/chat_stream.py using the "haiku" action*
 
-This is a plugin that lets you run models over OpenAI-style chat completion APIs, tested with `llama-server`, [groq](https://groq.com/), and the OpenAI official API. You can use this plugin to send code snippets or files and get LLM results directly in Sublime Text. Chatting is supported through a simple markdown text file interface with hotkeys (`[ctrl/cmd]+[enter]`, `[esc]/[c]`). There is also support to easily build custom agent actions that you can quickly access from the command palette.
+This plugin lets you run models over OpenAI-style chat completion APIs, tested to work with [llama.cpp](https://github.com/ggml-org/llama.cpp), [groq accelerators](https://console.groq.com/docs/api-reference#chat-create), [Google Gemini (TPU)](https://ai.google.dev/gemini-api/docs/openai), and the [OpenAI official API](https://platform.openai.com/docs/api-reference/chat). You can use this plugin to quickly send code snippets or entire files to an LLM and stream results directly back to Sublime Text. Chatting is supported through a simple markdown text file interface with hotkeys (`[ctrl/cmd]+[enter]`, `[esc]/[c]`). There is also support to easily build custom agent actions that you can quickly access from the command palette.
 
-### Features 😍
+## Features 😍
 **Highlight code and use `AI Agent` to launch a custom chat with relevant context:**
 ![Highlight a Code Section and Start a Chat](pics/highlight_chat.png)
 
@@ -21,14 +21,14 @@ This is a plugin that lets you run models over OpenAI-style chat completion APIs
 **Fast and streamlined interactive markdown chat interface with fully editable history and prompts:**
 ![Markdown-formatted Documents are used for LLM Chat](pics/markdown_chat.png)
 
-### Usage 🛠
-This plugin currently has three major command pallet actions:
+## Usage 🛠
+This plugin currently has four major command palette actions:
 - `AI Agent` - takes highlighted text (or an entire file) and a command string to perform a custom action
-- `AI Agent Action` - takes highlighted text (or an entire file) and starts a new chat based on a user-defined action (see `agentic.sublime-settings`)
+- `AI Agent Action` - takes highlighted text (or an entire file) and starts a new chat based on a user-defined action (see `Agentic.sublime-settings`)
 - `AI Agent Model Chat` - takes highlighted text and starts a new chat session with the selected model
 - `AI Agent Chat Submit` - will send the contents of a chat file to an LLM for a chat-like interface (triggered with `[ctrl/cmd]+[enter]` from a chat file; `[c]` or `[esc]` to interrupt)
 
-There are also several supplemental pallet actions to help control chats
+There are also several supplemental palette actions to help control chats
 - `AI Agent Clear Reasoning` - deletes model 'reasoning' output from chat files
 - `AI Agent Clone Chat` - creates a copy of an existing chat
 - `AI Agent New Chat` - creates a new chat file
@@ -36,30 +36,20 @@ There are also several supplemental pallet actions to help control chats
 For settings, there is a convenience command:
 - `AI Agent Settings` which will open your configuration file `Agentic.sublime-settings`.
 
-### Settings ✏
-Configuring user-defined actions (`AI Agent Settings` / `Agentic.sublime-settings`):
-```json
-"actions": {
-		// Each action has a key word (which shows up in the menu):
-		"haiku": {
-			"models": "models_high", // name of list of models to use
-			"system": "You are an expert.", // system prompt
-			"prompt": "Turn this into a haiku." // user prompt
-		},
-		...
-}
-```
+## Settings ✏
+### Model Configuration
+Configuring models is done through `AI Agent Settings` -> modify `Agentic.sublime-settings`:
 
-Configuring models (`AI Agent Settings` / `Agentic.sublime-settings`):
+**(Example model configuration for local llama.cpp running OpenAI GPT-OSS-120B:)**
 ```json
-"models_high": ["high_1", "high_2"], // Named model list for capability family
+"models_high": ["local-20b-high1", "local-20b-high2"],
 "models": {
-		"high_1": // Each model configuration has a name
+		"local-20b-high1":
 		{
 			"url": "http://127.0.0.1:8080/v1/chat/completions",
-			"model": "gpt-oss-20b", // API model name
-			"token": "000000000000",// API Token
-			"options": {            // API parameters go in "options"
+			"model": "gpt-oss-20b",
+			"token": "000000000000",
+			"options": {
 				"stream": true,
 				"chat_template_kwargs": {"reasoning_effort": "high"},
 				"temperature": 1.0,
@@ -67,18 +57,36 @@ Configuring models (`AI Agent Settings` / `Agentic.sublime-settings`):
 				"min_p": 0,
 				"top_k": 0
 			},
-			"context": 128000.0,  // Approximate usable context length
-			"system": "my_gpu1",  // A unique resource id (for local systems)
-			"workers": 3,         // Number of concurrent requests supported
-			"speed": 120,         // Approximate tokens per second
-			"effort": 32768.0     // Output tokens required on average to solve
+			"context": 128000.0,
+			"system": "my_gpu1",
+			"workers": 3,
+			"speed": 120,
+			"effort": 32768.0,
+			"cost": 0.056,
 		},
-		"high_2":
+		"local-20b-high2":
 		...
 }
 ```
+* Models are organized through a list of model names in the settings (`"models_high": [...]`)
+* Each model has a name (`"high_1"`, `"high_1"`, `"my-model"`, etc.)
+* The `"model"` name should match what the API provider requres (example below)
+* Include a token for paid APIs
+* Any additional model API parameters are placed in `"options"`
+* `"context"` = Approximate usable context length
+* `"system"` = A unique resource id (for local systems)
+* `"workers"` = Number of concurrent requests supported on the system
+* `"speed"` = Approximate tokens per second
+* `"effort"` = Typical number of tokens used to solve an average problem
+* `"cost"` = $ USD per million generated tokens (electricity cost for local GPT-OSS-20B)
 
-**Example [groq](https://groq.com/) API:**
+A note on errors in your model configuration:
+- If your options are bad, OpenAI returns `HTTP Error 400: Bad Request` and you will not get any output (check the python output log with `[ctrl/cmd]+[``]`)
+
+
+Configuring user-defined actions (`AI Agent Settings` / `Agentic.sublime-settings`):
+
+**Example [groq](https://groq.com/) accelerator GPT-OSS-120B:** 🚀
 ```json
 "groq-oss-120":{
 	"url":"https://api.groq.com/openai/v1/chat/completions",
@@ -100,7 +108,25 @@ Configuring models (`AI Agent Settings` / `Agentic.sublime-settings`):
 },
 ```
 
-**Example Model configuration - OpenAI GPT-5:**
+**Example Model configuration - Google TPU Gemini 2.5 Pro:** 🏋
+```JSON
+"gemini-2.5-pro": {
+	"url":"https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+	"model": "gemini-2.5-pro",
+	"token": "<REDACTED>",
+	"options": {
+		"stream": true,
+	},
+	"context": 1050000,
+	"system": "google",
+	"workers": 1000.0,
+	"speed": 79.94,
+	"effort": 16384.0,
+	"cost": 11.25,
+},
+```
+
+**Example Model configuration - OpenAI GPT-5:** 🐢
 ```JSON
 "gpt-5":{
 	"url":"https://api.openai.com/v1/chat/completions",
@@ -120,7 +146,23 @@ Configuring models (`AI Agent Settings` / `Agentic.sublime-settings`):
 },
 ```
 - (Note, for `gpt-5` and `gpt-5-mini`, `"stream": true` does not work unless you verify your ID. `gpt-5-nano` streaming always works though.)
-- If your options are bad, OpenAI returns `HTTP Error 400: Bad Request` and you will not get any output (check the python output log with `[ctrl/cmd]+[``]`)
+
+### Customizing user actions
+**Example "haiku" action:**
+```json
+"actions": {
+		"haiku": {
+			"models": "models_high",
+			"system": "You are an expert.",
+			"prompt": "Turn this into a haiku."
+		},
+		...
+}
+```
+* Each action has a key word (which shows up in the menu):
+* `"models"` should be the name of list of models to use (see model configuration)
+* `"system"` is the system prompt to use for the action
+* `"prompt"` is the user prompt to use for the action
 
 ## Installation 📂
 You can install this plugin by copying its contents to your `Packages` folder:
@@ -132,7 +174,8 @@ cd ~/.config/sublime-text/Packages                 # on Linux
 git clone https://git.sr.ht/~alecgraves/agentic-sublime
 ```
 
-* This plugin works better with [Origami](https://github.com/SublimeText/Origami)
+* This plugin works well with [Origami](https://github.com/SublimeText/Origami)
+    * "auto_close_empty_panes": true,
 
 ## Status ✅
 Currently, this plugin supports chat incorporating user-highlighted code for context. This functionality has been tested with local LLMs running under [llama.cpp](https://github.com/ggml-org/llama.cpp). Future goals include implementation of DeepMind AlphaEvolve-like functionality for automated high-performance evolutionary code optimization.
@@ -141,7 +184,7 @@ Currently, this plugin supports chat incorporating user-highlighted code for con
 - [x] Submit query with context
 - [x] User-defined chat actions
 - [x] Multiple local LLM support
-- [x] Accelerator APIs ([groq](https://groq.com/))
+- [x] Accelerator APIs ([groq](https://groq.com/), [Google TPU](https://cloud.google.com/blog/products/compute/inside-the-ironwood-tpu-codesigned-ai-stack))
 - [ ] Function calling
 - [ ] Multi-agent workflows (e.g. generate then reduce/combine)
 
@@ -155,7 +198,7 @@ This project is released under 🔥 ⚖ The Unlicense ⚖ 🔥
 ### 1. Build llama.cpp (updated 2025)
 To install [llama.cpp](https://github.com/ggml-org/llama.cpp), compile it for your platform. The llama-server file is located at `build/bin/llama-server`
 
-NVIDIA (Makeflie):
+NVIDIA (`Makefile`):
 ```make
 CC=clang
 CXX=clang++
@@ -177,7 +220,7 @@ all:
 	LDLINKFLAGS="$(LDLINKFLAGS)" make -C build -j $$(nproc) llama-server
 ```
 
-NVIDIA + Intel-CPU (ICX compiler) (shell):
+NVIDIA + Intel-CPU (ICX compiler) (`sh`):
 ```sh
 { . /opt/intel/oneapi/setvars.sh --force; } || { echo Already sourced...; }
 git fetch --prune
@@ -191,7 +234,7 @@ cmake -B build -DGGML_CUDA=ON -DLLAMA_CURL=OFF -DBUILD_SHARED_LIBS=OFF  \
 make -C build -j $(nproc) llama-server
 ```
 
-AMDGPU (ROCm) (shell):
+AMDGPU (ROCm) (`sh`):
 ```sh
 HIPCXX="$(hipconfig -l)/clang" HIP_PATH="$(hipconfig -R)" \
     cmake -S . -B build -DGGML_HIP=ON -DLLAMA_CURL=OFF -DAMDGPU_TARGETS=gfx1200 -DCMAKE_BUILD_TYPE=Release \
@@ -206,7 +249,7 @@ Then, run llama-server:
 
 - OSS 20B, 24GB vram, NVidia:
 ```sh
-CUDA_VISIBLE_DEVICES=0 llama-server -m ~/models/gpt-oss-20b-F16.gguf -ctk f16 -ctv f16 -np 3 -fa on -c $((32768*4*3)) --top-k 0 --temp 1.0 --top-p 1.0  --min-p 0 --presence-penalty 0.5 --jinja -ngl 20000 --prio 3 --port 8080 --no-mmap --chat-template-kwargs '{\"reasoning_effort\": \"high\"}'"
+CUDA_VISIBLE_DEVICES=0 llama-server -m ~/models/gpt-oss-20b-F16.gguf -ctk f16 -ctv f16 -np 3 -fa on -c $((32768*4*3)) --top-k 0 --temp 1.0 --top-p 1.0  --min-p 0 --presence-penalty 0.5 --jinja -ngl 20000 --prio 3 --port 8080 --no-mmap --chat-template-kwargs '{\"reasoning_effort\": \"high\"}'
 ```
 
 - OSS 20B, 16GB vram, AMD ROCm:
@@ -216,12 +259,12 @@ HIP_VISIBLE_DEVICES=0 llama-server -m ~/models/gpt-oss-20b-F16.gguf -ctk f16 -ct
 
 - OSS 20B, 2xT1000 8GB:
 ```sh
-llama-server -ngl 99 -c $((32768*2)) -t 4 -fa on -ctk f16 -ctv f16 -m ~/models/gpt-oss-20b-F16.gguf --jinja  --prio 3 --top-k 0 --temp 1.0 --top-p 1.0 --min-p 0 --presence-penalty 0.5 -ngl 20000 -np 1 --port 8080 --split-mode row --tensor-split 7,8 --chat-template-kwargs '{\"reasoning_effort\": \"high\"}'
+llama-server -ngl 99 -c $((32768*2)) -t 4 -fa on -ctk f16 -ctv f16 -m ~/models/gpt-oss-20b-F16.gguf --jinja  --prio 3 --top-k 0 --temp 1.0 --top-p 1.0 --min-p 0 --presence-penalty 0.5 -np 1 --port 8080 --split-mode row --tensor-split 7,8 --chat-template-kwargs '{\"reasoning_effort\": \"high\"}'
 ```
 
 - OSS 120B (Intel CPU, 64GB RAM):
 ```sh
-CUDA_VISIBLE_DEVICES='' llama-server -fa on -ctk q8_0 -ctv q8_0 -m ~/models/gpt-oss-120b-UD-Q4_K_XL-00001*.gguf --threads $(ncore) -np 1 --n-gpu-layers 99 -c $((32768*2)) --top-k 0 --temp 1.0 --top-p 1.0 --jinja  --min-p 0 --presence-penalty 0.5 -n 38912 --prio 2 --port 8081 --mlock --swa-full --chat-template-kwargs '{\"reasoning_effort\": \"high\"}'
+CUDA_VISIBLE_DEVICES='' llama-server -fa on -ctk q8_0 -ctv q8_0 -m ~/models/gpt-oss-120b-UD-Q4_K_XL-00001*.gguf -np 1 --n-gpu-layers 99 -c $((32768*2)) --top-k 0 --temp 1.0 --top-p 1.0 --jinja  --min-p 0 --presence-penalty 0.5 -n 38912 --prio 2 --port 8081 --mlock --swa-full --chat-template-kwargs '{\"reasoning_effort\": \"high\"}'
 ```
 
 ### 4. Connect
