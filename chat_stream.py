@@ -211,7 +211,7 @@ class AgentStreamingTask(threading.Thread):
 
             if self._cancel_event.is_set() or not self.view or not self.view.is_valid():
                 self._cancel_event.set()
-                self.view.set_status("streamstatus", "Interrupted")
+                sublime.status_message("Interrupted")
                 break
 
             if is_reasoning:
