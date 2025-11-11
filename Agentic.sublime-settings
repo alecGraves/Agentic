@@ -55,7 +55,7 @@
 			"token": "000000000000", // Token for OpenAI API
 			"options": { // (request API parameters here)
 				"stream": true,  // this is the only thing that works for now
-				// "reasoning": {"effort":"high"}, // e.g. OpenAI
+				// "reasoning_effort": "high", // e.g. OpenAI
 				"chat_template_kwargs": {"reasoning_effort": "high"},
 				"temperature": 1.0,
 				"top_p": 1.0,

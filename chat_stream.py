@@ -61,7 +61,30 @@ def _pick_model(capability=None):
     return model
 
 
-def chat_stream(messages, model):
+def _parse_metrics(r):
+    """
+    Return (cache_n, prompt_n, prompt_per_sec, predicted_per_sec)
+    from either a "timings" block or the older "usage" block.
+    """
+    t = r.get("timings")
+    if t:
+        print(t)
+        return (t["cache_n"], t["prompt_n"],
+                t["prompt_per_second"], t["predicted_per_second"])
+    u = r.get("usage")
+    if u:
+        print(u)
+        cache = u.get("prompt_tokens_details", {}).get("cached_tokens", 0)
+        prompt = u.get("prompt_tokens", 0) - cache
+        pt = u.get("prompt_time", 0) or 1e12
+        ct = u.get("completion_time", 0) or 1e12
+        return (cache, prompt,
+                u.get("prompt_tokens", 0) / pt,
+                u.get("completion_tokens", 0) / ct)
+    return None
+
+
+def chat_stream(messages, model, cancel=None):
     """
     Query an OpenAI server given messages and a model configuration.
     Yields `(is_reasoning, text)` for incremental stream chunks.
@@ -75,7 +98,7 @@ def chat_stream(messages, model):
         "messages": messages,
         "model": model.get("model"),
     })
-    stream = body["stream"]
+    stream = body.get("stream", False)
 
     data = json.dumps(body).encode("utf‑8")
     req = urllib.request.Request(
@@ -89,22 +112,21 @@ def chat_stream(messages, model):
 
     if not stream:
         resp = urllib.request.urlopen(req)
-        resp = [json.loads(str(r.decode("utf‑8").strip())) for r in resp][0]
+        resp = json.loads(''.join([r.decode("utf-8") for r in resp]))
         m = resp["choices"][0]["message"]
         if "reasoning_content" in m:
             yield (True, m["reasoning_content"])
         if "content" in m:
             yield (False, m["content"])
-        if "timings" in resp:
-            t = resp["timings"]
-            yield (t["cache_n"],
-                   t["prompt_n"],
-                   t["prompt_per_second"],
-                   t["predicted_per_second"])
+        m = _parse_metrics(resp)
+        if m:
+            yield (m)
         return
 
     with urllib.request.urlopen(req) as resp:
         for raw in resp:
+            if cancel and cancel.is_set():
+                return
             line = raw.decode("utf‑8").strip()
             if not line.startswith("data: "):
                 continue
@@ -117,6 +139,7 @@ def chat_stream(messages, model):
             except ValueError:
                 continue
 
+            # print(evt)  # debugging provider stream outputs
             for choice in evt.get("choices", []):
                 delta = choice.get("delta", {})
 
@@ -125,33 +148,26 @@ def chat_stream(messages, model):
                     yield (False, delta["content"])
                 elif "reasoning_content" in delta and delta["reasoning_content"]:
                     yield (True, delta["reasoning_content"])
-                # Final timing report
-                elif not delta and "timings" in evt:
-                    t = evt["timings"]
-                    yield (t["cache_n"],
-                           t["prompt_n"],
-                           t["prompt_per_second"],
-                           t["predicted_per_second"])
-                    if choice.get("finish_reason") == "stop":
-                        return
+                elif not delta:  # Final timing report
+                    m = _parse_metrics(evt)
+                    if m:
+                        yield (m)
 
 
 class AgentStreamingTask(threading.Thread):
     """Background worker – streams into the view"""
 
-    def __init__(self, view, messages, model, registry):
+    def __init__(self, view, messages, registry):
         super().__init__(daemon=True)
         self.view = view
         self.messages = messages
         self.registry = registry
-        self._cancel = False
-        if model:
-            self.view.settings().set("agent_model", model)
+        self._cancel_event = threading.Event()
         self.show_reasoning = sublime.load_settings(
             "Agentic.sublime-settings").get("show_reasoning")
 
     def cancel(self):
-        self._cancel = True
+        self._cancel_event.set()
         self.view.settings().set("is_streaming", False)
 
     def run(self):
@@ -166,12 +182,12 @@ class AgentStreamingTask(threading.Thread):
         if self.view.settings().get("agent_model") is None:
             self.view.settings().set(
                 "agent_model",
-                _pick_model()
-            )
+                _pick_model())
 
         for chunk in chat_stream(
                 self.messages,
-                self.view.settings().get("agent_model")):
+                self.view.settings().get("agent_model"),
+                self._cancel_event):
             # Normal (2‑tuple) chunk vs. metrics (4‑tuple)
             if isinstance(chunk, tuple) and len(chunk) == 2:
                 is_reasoning, text = chunk
@@ -181,7 +197,8 @@ class AgentStreamingTask(threading.Thread):
                         cache, prompt, int(tps)))
                 break
 
-            if self._cancel or not self.view or not self.view.is_valid():
+            if self._cancel_event.is_set() or not self.view or not self.view.is_valid():
+                self._cancel_event.set()
                 self.view.set_status("streamstatus", "Interrupted")
                 break
 
@@ -204,8 +221,7 @@ class AgentStreamingTask(threading.Thread):
     def _write(self, text):
         sublime.set_timeout(
             lambda c=text: self.view.run_command("append", {"characters": c}),
-            0
-        )
+            0)
 
     def _finalise(self):
         if not self.view.is_valid():
@@ -218,7 +234,9 @@ class AgentStreamingTask(threading.Thread):
 def start_streaming(view, messages, model=None):
     """Public helper – start a streaming task on a view"""
     view.settings().set("is_streaming", True)
-    task = AgentStreamingTask(view, messages, model, _ACTIVE_STREAMERS)
+    if model:
+        view.settings().set("agent_model", model)
+    task = AgentStreamingTask(view, messages, _ACTIVE_STREAMERS)
     _ACTIVE_STREAMERS[view.id()] = task
     task.start()
 
@@ -332,7 +350,6 @@ def _read_selection(view):
 
 class PromptInputHandler(sublime_plugin.TextInputHandler):
     """Input handler – free‑form prompt for AgentCodeCommand"""
-
     def placeholder(self):
         return "Enter command string"
 
@@ -363,8 +380,9 @@ class AgentCodeCommand(sublime_plugin.WindowCommand):
         messages = _build_messages_from_text(new_chat)
 
         # Start agent
-        start_streaming(view, messages)
-        sublime.status_message("Submitting prompt")
+        if prompt:  # only launch automatically if user provided a command
+            start_streaming(view, messages)
+            sublime.status_message("Submitting prompt")
 
 
 class AgentChatCommand(sublime_plugin.WindowCommand):
@@ -375,10 +393,7 @@ class AgentChatCommand(sublime_plugin.WindowCommand):
             return
 
         if view.settings().get("is_streaming"):
-            task = _ACTIVE_STREAMERS.get(view.id())
-            if task:
-                task.cancel()
-                sublime.status_message("Streaming cancelled")
+            self.window.run_command("cancel_stream")
             return
 
         text = view.substr(sublime.Region(0, view.size()))
@@ -496,3 +511,51 @@ class AgentActionCommand(sublime_plugin.WindowCommand):
 
     def _load_actions(self):
         return sublime.load_settings("Agentic.sublime-settings").get("actions")
+
+
+class AgentModelChatCommand(sublime_plugin.WindowCommand):
+    """Run a user-defined action - see Agentic.sublime-settings"""
+    def run(self):
+        self.models = self._load_models()
+        if not self.models:
+            sublime.error_message(
+                "Agentic.sublime-settings contains no models.\n"
+                'Add a JSON array under the key `"models"`.'
+            )
+            return
+
+        self.window.show_quick_panel(
+            list(self.models.keys()),
+            self.model_chat
+        )
+
+    def model_chat(self, index):
+        """Called when the user picks an item (or cancels)."""
+        if index == -1:  # user pressed Escape
+            return
+        model_name = list(self.models.keys())[index]
+        model = self.models[model_name]
+        print(model)
+
+        old = self.window.active_view()
+        sel = old.sel()
+        if any(not r.empty() for r in sel):  # load active selection
+            content = "\n...\n".join(old.substr(r)
+                                     for r in sel if not r.empty())
+            user_prompt = "File: {}\n```\n{}\n```\n".format(
+                old.file_name(), content)
+        else:  # empty new chat
+            user_prompt = ""
+
+        new_chat = "# --- System ---\n{}\n\n# --- User ---\n{}".format(
+            sublime.load_settings("Agentic.sublime-settings").get("default_prompt"),
+            user_prompt)
+
+        view = _create_chat(self.window, "Chat " + model_name[:12], new_chat)
+
+        messages = _build_messages_from_text(new_chat)
+        view.settings().set("agent_model", model)
+
+    def _load_models(self):
+        return sublime.load_settings("Agentic.sublime-settings").get("models")
+

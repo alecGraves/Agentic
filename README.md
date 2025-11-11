@@ -7,9 +7,9 @@ Sublime breathes code,
 Agents speak in marked whispers,  
 Chats rise, fall, then rest.
 ```
-*~GPT-OSS-20b on Agentic/chat_stream.py using the "haiku" action*
+*~llama.cpp GPT-OSS-20b on Agentic/chat_stream.py using the "haiku" action*
 
-This is a plugin that lets you run models over OpenAI-style chat completion APIs, tested with `llama-server`. You can use this plugin to send code snippets or files and get LLM results directly in Sublime Text. Chatting is supported through a simple markdown text file interface with hotkeys (`[ctrl/cmd]+[enter]`, `[esc]/[c]`). There is also support to easily build custom agent actions that you can quickly access from the command palette.
+This is a plugin that lets you run models over OpenAI-style chat completion APIs, tested with `llama-server`, [groq](https://groq.com/), and the OpenAI official API. You can use this plugin to send code snippets or files and get LLM results directly in Sublime Text. Chatting is supported through a simple markdown text file interface with hotkeys (`[ctrl/cmd]+[enter]`, `[esc]/[c]`). There is also support to easily build custom agent actions that you can quickly access from the command palette.
 
 ### Features 😍
 **Highlight code and use `AI Agent` to launch a custom chat with relevant context:**
@@ -25,6 +25,7 @@ This is a plugin that lets you run models over OpenAI-style chat completion APIs
 This plugin currently has three major command pallet actions:
 - `AI Agent` - takes highlighted text (or an entire file) and a command string to perform a custom action
 - `AI Agent Action` - takes highlighted text (or an entire file) and starts a new chat based on a user-defined action (see `agentic.sublime-settings`)
+- `AI Agent Model Chat` - takes highlighted text and starts a new chat session with the selected model
 - `AI Agent Chat Submit` - will send the contents of a chat file to an LLM for a chat-like interface (triggered with `[ctrl/cmd]+[enter]` from a chat file; `[c]` or `[esc]` to interrupt)
 
 There are also several supplemental pallet actions to help control chats
@@ -76,6 +77,50 @@ Configuring models (`AI Agent Settings` / `Agentic.sublime-settings`):
 		...
 }
 ```
+
+**Example [groq](https://groq.com/) API:**
+```json
+"groq-oss-120":{
+	"url":"https://api.groq.com/openai/v1/chat/completions",
+	"model": "openai/gpt-oss-120b",
+	"token": "<REDACTED>",
+	"options": {
+		"stream": true,
+		"reasoning_effort": "high",
+		"temperature": 1,
+		"top_p": 1,
+		"presence_penalty": 0.5,
+	},
+	"context": 131072,
+	"system": "groq",
+	"workers": 1000.0,
+	"speed": 500.0,
+	"effort": 32768.0,
+	"cost": 0.75
+},
+```
+
+**Example Model configuration - OpenAI GPT-5:**
+```JSON
+"gpt-5":{
+	"url":"https://api.openai.com/v1/chat/completions",
+	"model": "gpt-5",
+	"token": "<REDACTED>",
+	"options": {
+		"stream": false,
+		"reasoning_effort": "high",
+		"verbosity": "low"
+	},
+	"context": 400000,
+	"system": "openai",
+	"workers": 1000.0,
+	"speed": 40.0,
+	"effort": 4096.0,
+	"cost": 11.25
+},
+```
+- (Note, for `gpt-5` and `gpt-5-mini`, `"stream": true` does not work unless you verify your ID. `gpt-5-nano` streaming works though.
+- If your options are bad, OpenAI returns `HTTP Error 400: Bad Request` and you will not get any response (check the python output log with `[ctrl/cmd]+[``]`)
 
 ## Installation 📂
 You can install this plugin by copying its contents to your `Packages` folder:
@@ -177,9 +222,9 @@ Currently, this plugin supports chat incorporating user-highlighted code for con
 - [x] Submit query with context
 - [x] User-defined chat actions
 - [x] Multiple local LLM support
+- [x] Accelerator APIs ([groq](https://groq.com/))
 - [ ] Function calling
 - [ ] Multi-agent workflows (e.g. generate then reduce/combine)
-- [ ] Try accelerator APIs like [groq](https://groq.com/)
 
 ## License ⚖
 This project is released under 🚀🔥 ⚖ The Unlicense ⚖ 🔥🚀

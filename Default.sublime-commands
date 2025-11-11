@@ -8,6 +8,10 @@
         "command": "agent_action"
     },
     {
+        "caption": "AI Agent Model Chat",
+        "command": "agent_model_chat"
+    },
+    {
         "caption": "AI Agent Chat Submit",
         "command": "agent_chat"
     },
