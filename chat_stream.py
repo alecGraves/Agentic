@@ -56,8 +56,8 @@ def _pick_model(capability=None):
         capability = settings.get("default_models")
     capable_models = settings.get(capability)
     models = settings.get("models")
-    model = random.choice([models[m] for m in capable_models])
-    print(model)
+    model = random.choice(capable_models)
+    print("Using", model)
     return model
 
 
@@ -71,7 +71,7 @@ def _parse_metrics(r):
         print(t)
         return (t["cache_n"], t["prompt_n"],
                 t["prompt_per_second"], t["predicted_per_second"])
-    u = r.get("usage")
+    u = r.get("usage")  # groq / openai
     if u:
         print(u)
         cache = u.get("prompt_tokens_details", {}).get("cached_tokens", 0)
@@ -98,6 +98,13 @@ def chat_stream(messages, model, cancel=None):
         "messages": messages,
         "model": model.get("model"),
     })
+
+    if "include_reasoning" in body and body["include_reasoning"]:
+        body.update({  # match the package setting if True
+            "include_reasoning":
+            sublime.load_settings("Agentic.sublime-settings").get("show_reasoning")
+        })
+
     stream = body.get("stream", False)
 
     data = json.dumps(body).encode("utf‑8")
@@ -114,13 +121,15 @@ def chat_stream(messages, model, cancel=None):
         resp = urllib.request.urlopen(req)
         resp = json.loads(''.join([r.decode("utf-8") for r in resp]))
         m = resp["choices"][0]["message"]
-        if "reasoning_content" in m:
+        if "reasoning_content" in m and m["reasoning_content"]:
             yield (True, m["reasoning_content"])
+        elif "reasoning" in m and m["reasoning"]:  # groq
+            yield (True, m["reasoning"])
         if "content" in m:
             yield (False, m["content"])
-        m = _parse_metrics(resp)
-        if m:
-            yield (m)
+        t = _parse_metrics(resp)
+        if t:
+            yield (t)
         return
 
     with urllib.request.urlopen(req) as resp:
@@ -144,14 +153,16 @@ def chat_stream(messages, model, cancel=None):
                 delta = choice.get("delta", {})
 
                 # Harvest content / reasoning tokens
-                if "content" in delta and delta["content"]:
-                    yield (False, delta["content"])
-                elif "reasoning_content" in delta and delta["reasoning_content"]:
+                if "reasoning_content" in delta and delta["reasoning_content"]:
                     yield (True, delta["reasoning_content"])
+                elif "reasoning" in delta and delta["reasoning"]:  # groq
+                    yield (True, delta["reasoning"])
+                elif "content" in delta and delta["content"]:
+                    yield (False, delta["content"])
                 elif not delta:  # Final timing report
-                    m = _parse_metrics(evt)
-                    if m:
-                        yield (m)
+                    t = _parse_metrics(evt)
+                    if t:
+                        yield (t)
 
 
 class AgentStreamingTask(threading.Thread):
@@ -184,12 +195,13 @@ class AgentStreamingTask(threading.Thread):
                 "agent_model",
                 _pick_model())
 
-        for chunk in chat_stream(
-                self.messages,
-                self.view.settings().get("agent_model"),
-                self._cancel_event):
+        # Load latest model settings
+        models = sublime.load_settings("Agentic.sublime-settings").get("models")
+        model = models[self.view.settings().get("agent_model")]
+
+        for chunk in chat_stream(self.messages, model, self._cancel_event):
             # Normal (2‑tuple) chunk vs. metrics (4‑tuple)
-            if isinstance(chunk, tuple) and len(chunk) == 2:
+            if len(chunk) == 2:
                 is_reasoning, text = chunk
             else:
                 cache, prompt, pps, tps = chunk
@@ -231,11 +243,11 @@ class AgentStreamingTask(threading.Thread):
         self.view.settings().set("is_streaming", False)
 
 
-def start_streaming(view, messages, model=None):
+def start_streaming(view, messages, model_name=None):
     """Public helper – start a streaming task on a view"""
     view.settings().set("is_streaming", True)
-    if model:
-        view.settings().set("agent_model", model)
+    if model_name:
+        view.settings().set("agent_model", model_name)
     task = AgentStreamingTask(view, messages, _ACTIVE_STREAMERS)
     _ACTIVE_STREAMERS[view.id()] = task
     task.start()
@@ -554,7 +566,7 @@ class AgentModelChatCommand(sublime_plugin.WindowCommand):
         view = _create_chat(self.window, "Chat " + model_name[:12], new_chat)
 
         messages = _build_messages_from_text(new_chat)
-        view.settings().set("agent_model", model)
+        view.settings().set("agent_model", model_name)
 
     def _load_models(self):
         return sublime.load_settings("Agentic.sublime-settings").get("models")
