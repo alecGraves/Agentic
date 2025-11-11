@@ -96,7 +96,7 @@ def chat_stream(messages, model, cancel=None):
     """
     url = model.get("url")
     token = model.get("token")
-    body = model.get("options")
+    body = dict(model.get("options", {}))
     body.update({
         "messages": messages,
         "model": model.get("model"),
@@ -202,34 +202,43 @@ class AgentStreamingTask(threading.Thread):
         models = sublime.load_settings("Agentic.sublime-settings").get("models")
         model = models[self.view.settings().get("agent_model")]
 
-        for chunk in chat_stream(self.messages, model, self._cancel_event):
-            # Normal (2‑tuple) chunk vs. metrics (4‑tuple)
-            if len(chunk) == 2:
-                is_reasoning, text = chunk
-            else:
-                cache, prompt, pps, tps = chunk
-                sublime.status_message("Done. cache:{} new:{} tk/s:{}".format(
-                        cache, prompt, int(tps)))
-                break
+        try:
+            for chunk in chat_stream(self.messages, model, self._cancel_event):
+                # Normal (2‑tuple) chunk vs. metrics (4‑tuple)
+                if len(chunk) == 2:
+                    is_reasoning, text = chunk
+                else:
+                    cache, prompt, pps, tps = chunk
+                    sublime.status_message("Done. cache:{} new:{} tk/s:{}".format(
+                            cache, prompt, int(tps)))
+                    break
 
-            if self._cancel_event.is_set() or not self.view or not self.view.is_valid():
-                self._cancel_event.set()
-                sublime.status_message("Interrupted")
-                break
+                if self._cancel_event.is_set() or not self.view or not self.view.is_valid():
+                    self._cancel_event.set()
+                    sublime.status_message("Interrupted")
+                    break
 
-            if is_reasoning:
-                if not self.show_reasoning:
-                    continue
-                if not prev_reasoning:  # first reasoning message
-                    self._write("\n## --- Thinking ---\n>")
-                    prev_reasoning = True
-                text = text.replace("\n", "\n> ")
-            else:
-                if prev_reasoning:
-                    self._write("\n\n## --- Response ---\n")
-                    prev_reasoning = False
+                if is_reasoning:
+                    if not self.show_reasoning:
+                        continue
+                    if not prev_reasoning:  # first reasoning message
+                        self._write("\n## --- Thinking ---\n>")
+                        prev_reasoning = True
+                    text = text.replace("\n", "\n> ")
+                else:
+                    if prev_reasoning:
+                        self._write("\n\n## --- Response ---\n")
+                        prev_reasoning = False
+                self._write(text)
 
-            self._write(text)
+        except Exception as e:
+            sublime.error_message(
+                "Could not stream from model:\n"
+                "{}\n{}\n{}\nError: {}".format(
+                    model.get("model", '"model" field missing"'),
+                    model.get("url", '"url" field missing'),
+                    model.get("options", {}),
+                    str(e)))
 
         sublime.set_timeout(self._finalise, 0)
 

@@ -80,9 +80,11 @@ Configuring models is done through `AI Agent Settings` -> modify `Agentic.sublim
 * `"effort"` = Typical number of tokens used to solve an average problem
 * `"cost"` = $ USD per million generated tokens (electricity cost for local GPT-OSS-20B)
 
-A note on errors in your model configuration:
-- If your options are bad, OpenAI returns `HTTP Error 400: Bad Request` and you will not get any output (check the python output log with `[ctrl/cmd]+[``]`)
-
+**Common Model Configuration Errors** (will display if you try to run and `AI Agent` command with an invalid configuration):
+* `HTTP Error 400: Bad Request` - bad `"options"` for the model
+* `HTTP Error 401: Unauthorized` - bad authentication token
+* `HTTP Error 404: Not Found` - invalid `"model"` name or bad URL
+* `urlopen error [Errno -2] Name or service not known` - bad URL
 
 Configuring user-defined actions (`AI Agent Settings` / `Agentic.sublime-settings`):
 
@@ -108,7 +110,7 @@ Configuring user-defined actions (`AI Agent Settings` / `Agentic.sublime-setting
 },
 ```
 
-**Example [groq compound (mini)](https://console.groq.com/docs/compound) 💘**
+**Example [groq compound (mini)](https://console.groq.com/docs/compound) 📚**
 ```json
 "groq-compound-mini":{
 	"url":"https://api.groq.com/openai/v1/chat/completions",
@@ -127,10 +129,10 @@ Configuring user-defined actions (`AI Agent Settings` / `Agentic.sublime-setting
 	"workers": 1000.0,
 	"speed": 450.0,
 	"effort": 32768.0,
-	"cost": 0.75, // per million tokens in+out
+	"cost": 0.75,
 },
 ```
-* ^ This model is integrated with tools, enabling web search ([Tavily](https://www.tavily.com/)), single-page website download, and sandboxed cloud code evaluation, streamed directly back into Sublime Text.
+* ^ This model is integrated with tools, enabling web search ([Tavily](https://www.tavily.com/)), single-page website download, and sandboxed cloud code evaluation, streamed directly back into Sublime Text. Raw results from these actions are output as 'reasoning' tokens.
 
 **Example Model configuration - Google (TPU) Gemini 2.5 Pro:** 🏋
 ```JSON
@@ -220,6 +222,8 @@ This project is released under 🔥 ⚖ The Unlicense ⚖ 🔥
 ## Appendix: Local LLM Model Installation and Running 🚀
 
 `Agentic` uses the OpenAI API, so anything that supports it should work. Ollama and llama.cpp are popular programs to run local LLMs. llama.cpp is faster, so this guide covers its use.
+
+Cloud LLM providers will receive any data you choose to send them through `AI Agent` commands, cloud server compute availability can fluctuate, and cloud-hosted model behavior can change suddenly. Due to these problems, it is often better to rely on open-weight local/on-premise models. Many good models like GPT-OSS-20B will run with >90k tokens (~360k characters) of context on a 16 GB graphics card such as the AMD RX 9060 or Nvidia 5060 TI at >50 tk/s or two 8 GB graphics cards like the Nvidia T1000 at >25 tk/s. Larger models like GPT-OSS-120B can run on a modern CPU system with 128 GB of RAM at 20tk/s. Using these options can improve developer productivity and significantly reduce operating costs for running LLMs (e.g. GPT-OSS-20B is $0.05/mil tokens electricity cost running on a 200W local GPU, while the roughly equivalent GPT-5-nano is $0.45/mil tokens: 9x more expensive).
 
 ### 1. Build llama.cpp (updated 2025)
 To install [llama.cpp](https://github.com/ggml-org/llama.cpp), compile it for your platform. The llama-server file is located at `build/bin/llama-server`
