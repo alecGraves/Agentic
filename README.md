@@ -1,5 +1,5 @@
 # Agentic – LLM Agents for Sublime Text 🤖
-A lightweight Sublime Text plugin that lets you concurrently command multiple local or remote LLMs.
+A lightweight [Sublime Text](https://www.sublimetext.com/) plugin that lets you concurrently command multiple local or remote LLMs.
 
 ## Introduction 🖊
 ```
@@ -119,8 +119,8 @@ Configuring models (`AI Agent Settings` / `Agentic.sublime-settings`):
 	"cost": 11.25
 },
 ```
-- (Note, for `gpt-5` and `gpt-5-mini`, `"stream": true` does not work unless you verify your ID. `gpt-5-nano` streaming works though.
-- If your options are bad, OpenAI returns `HTTP Error 400: Bad Request` and you will not get any response (check the python output log with `[ctrl/cmd]+[``]`)
+- (Note, for `gpt-5` and `gpt-5-mini`, `"stream": true` does not work unless you verify your ID. `gpt-5-nano` streaming always works though.)
+- If your options are bad, OpenAI returns `HTTP Error 400: Bad Request` and you will not get any output (check the python output log with `[ctrl/cmd]+[``]`)
 
 ## Installation 📂
 You can install this plugin by copying its contents to your `Packages` folder:
@@ -134,7 +134,21 @@ git clone https://git.sr.ht/~alecgraves/agentic-sublime
 
 * This plugin works better with [Origami](https://github.com/SublimeText/Origami)
 
-## LLM Model Installation and Running 🚀
+## Status ✅
+Currently, this plugin supports chat incorporating user-highlighted code for context. This functionality has been tested with local LLMs running under [llama.cpp](https://github.com/ggml-org/llama.cpp). Future goals include implementation of DeepMind AlphaEvolve-like functionality for automated high-performance evolutionary code optimization.
+
+- [x] Sublime chat interface
+- [x] Submit query with context
+- [x] User-defined chat actions
+- [x] Multiple local LLM support
+- [x] Accelerator APIs ([groq](https://groq.com/))
+- [ ] Function calling
+- [ ] Multi-agent workflows (e.g. generate then reduce/combine)
+
+## License ⚖
+This project is released under 🔥 ⚖ The Unlicense ⚖ 🔥
+
+## Appendix: Local LLM Model Installation and Running 🚀
 
 `Agentic` uses the OpenAI API, so anything that supports it should work. Ollama and llama.cpp are popular programs to run local LLMs. llama.cpp is faster, so this guide covers its use.
 
@@ -213,18 +227,4 @@ CUDA_VISIBLE_DEVICES='' llama-server -fa on -ctk q8_0 -ctv q8_0 -m ~/models/gpt-
 ### 4. Connect
 Now you should be able to automatically connect and run Agent commands, or you can update your model configurations to match your local deployment.
 
-run the `AI Agent Settings` command, or go to `Preferences > Package Settings > Agentic > Settings` to modify your llm configuration.
-
-## Status ✅
-Currently, this plugin supports chat incorporating user-highlighted code for context. This functionality has been tested with local LLMs running under [llama.cpp](https://github.com/ggml-org/llama.cpp). Future goals include implementation of DeepMind AlphaEvolve-like functionality for automated high-performance evolutionary code optimization.
-
-- [x] Sublime chat interface
-- [x] Submit query with context
-- [x] User-defined chat actions
-- [x] Multiple local LLM support
-- [x] Accelerator APIs ([groq](https://groq.com/))
-- [ ] Function calling
-- [ ] Multi-agent workflows (e.g. generate then reduce/combine)
-
-## License ⚖
-This project is released under 🚀🔥 ⚖ The Unlicense ⚖ 🔥🚀
+run the `AI Agent Settings` command, or go to `Preferences > Package Settings > Agentic > Settings` to modify your llm configuration to point to your local server. You can use port tunneling (`ssh -L ...`) to securely connect to personal LLM servers as well.
