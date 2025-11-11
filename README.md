@@ -165,17 +165,18 @@ Configuring user-defined actions (`AI Agent Settings` / `Agentic.sublime-setting
 * `"prompt"` is the user prompt to use for the action
 
 ## Installation 📂
-You can install this plugin by copying its contents to your `Packages` folder:
+You can install this plugin by saving it in your `Packages` folder:
 ```cmd
-cd "%APPDATA%\Sublime Text\Packages"               # on Windows
-cd ~/Library/Application\ Support/Sublime\ Text    # on Mac
-cd ~/.config/sublime-text/Packages                 # on Linux
+cd "%APPDATA%\Sublime Text\Packages"                      # on Windows
+cd ~/Library/Application\ Support/Sublime\ Text/Packages  # on Mac
+cd ~/.config/sublime-text/Packages                        # on Linux
 
-git clone https://git.sr.ht/~alecgraves/agentic-sublime
+git clone https://git.sr.ht/~alecgraves/Agentic
 ```
 
 * This plugin works well with [Origami](https://github.com/SublimeText/Origami)
-    * "auto_close_empty_panes": true,
+    * `"auto_close_empty_panes": true`
+    * Better pane navigation from the keyboard
 
 ## Status ✅
 Currently, this plugin supports chat incorporating user-highlighted code for context. This functionality has been tested with local LLMs running under [llama.cpp](https://github.com/ggml-org/llama.cpp). Future goals include implementation of DeepMind AlphaEvolve-like functionality for automated high-performance evolutionary code optimization.
