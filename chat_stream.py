@@ -232,7 +232,7 @@ class AgentStreamingTask(threading.Thread):
                 self._write(text)
 
         except Exception as e:
-            sublime.error_message(
+            print(
                 "Could not stream from model:\n"
                 "{}\n{}\n{}\nError: {}".format(
                     model.get("model", '"model" field missing"'),
@@ -240,14 +240,14 @@ class AgentStreamingTask(threading.Thread):
                     model.get("options", {}),
                     str(e)))
 
-        sublime.set_timeout(self._finalise, 0)
+        sublime.set_timeout(self._finalize, 0)
 
     def _write(self, text):
         sublime.set_timeout(
             lambda c=text: self.view.run_command("append", {"characters": c}),
             0)
 
-    def _finalise(self):
+    def _finalize(self):
         if not self.view.is_valid():
             return
         self.registry.pop(self.view.id(), None)
