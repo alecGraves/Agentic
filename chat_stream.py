@@ -232,13 +232,19 @@ class AgentStreamingTask(threading.Thread):
                 self._write(text)
 
         except Exception as e:
+            error_details = ""
+            try:
+                error_details = "\n" + e.read().decode('utf-8')
+            except Exception:
+                pass
             print(
                 "Could not stream from model:\n"
-                "{}\n{}\n{}\nError: {}".format(
+                "{}\n{}\n{}\nError: {}{}".format(
                     model.get("model", '"model" field missing"'),
                     model.get("url", '"url" field missing'),
                     model.get("options", {}),
-                    str(e)))
+                    str(e),
+                    error_details))
 
         sublime.set_timeout(self._finalize, 0)
 

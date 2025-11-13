@@ -38,7 +38,8 @@ For settings, there is a convenience command:
 
 ## Settings ✏
 ### Model Configuration
-Configuring models is done through `AI Agent Settings` -> modify `Agentic.sublime-settings`:
+- You can configure your models by going to `Preferences` > `Package Settings` > `Agentic` > `Settings` and modify your `Agentic.sublime-settings`
+- Or use the command:  `AI Agent Settings` -> modify your `Agentic.sublime-settings`
 
 **(Example model configuration for local llama.cpp running OpenAI GPT-OSS-120B:)**
 ```json
@@ -80,11 +81,12 @@ Configuring models is done through `AI Agent Settings` -> modify `Agentic.sublim
 * `"effort"` = Typical number of tokens used to solve an average problem
 * `"cost"` = $ USD per million generated tokens (electricity cost for local GPT-OSS-20B)
 
-**Common Model Configuration Errors** (will display if you try to run and `AI Agent` command with an invalid configuration):
+**Common Model Configuration Errors** (see errors in sublime console using ```[ctrl/cmd] + [`]``` or `View` > `Show Console`):
 * `HTTP Error 400: Bad Request` - bad `"options"` for the model
 * `HTTP Error 401: Unauthorized` - bad authentication token
 * `HTTP Error 404: Not Found` - invalid `"model"` name or bad URL
 * `urlopen error [Errno -2] Name or service not known` - bad URL
+
 
 Configuring user-defined actions (`AI Agent Settings` / `Agentic.sublime-settings`):
 
