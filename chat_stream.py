@@ -179,6 +179,8 @@ class AgentStreamingTask(threading.Thread):
         self._cancel_event = threading.Event()
         self.show_reasoning = sublime.load_settings(
             "Agentic.sublime-settings").get("show_reasoning")
+        self._buffer = []       # pending writes
+        self._pending = False   # a flush is already scheduled?
 
     def cancel(self):
         self._cancel_event.set()
@@ -213,7 +215,7 @@ class AgentStreamingTask(threading.Thread):
                             cache, prompt, int(tps)))
                     break
 
-                if self._cancel_event.is_set() or not self.view or not self.view.is_valid():
+                if self._cancel_event.is_set() or not self.is_valid():
                     self._cancel_event.set()
                     sublime.status_message("Interrupted")
                     break
@@ -248,13 +250,37 @@ class AgentStreamingTask(threading.Thread):
 
         sublime.set_timeout(self._finalize, 0)
 
-    def _write(self, text):
-        sublime.set_timeout(
-            lambda c=text: self.view.run_command("append", {"characters": c}),
-            0)
+    def _write(self, txt):
+        self._buffer.append(txt)            # atomic under the GIL
+        time = 25 if len(self._buffer) < 96 else 0
+        if not self._pending:               # schedule a debounced flush
+            self._pending = True
+            sublime.set_timeout(self.__flush, time)  # balance responsiveness and power
+
+    def is_valid(self):
+        return self.view and self.view.is_valid() \
+                and self.view.window() and self.view.window().is_valid()
+
+    def __flush(self):
+        """Do not run outside of sublime.set_timeout"""
+        self._pending = False
+        if not self.is_valid():
+            self._buffer.clear()
+            return
+
+        parts = []
+        while self._buffer:                 # pop everything (O(1) each)
+            parts.append(self._buffer.pop())
+        if not parts:
+            return
+
+        self.view.run_command(
+            "append",
+            {"characters": "".join(parts[::-1])}  # restore original order
+        )
 
     def _finalize(self):
-        if not self.view.is_valid():
+        if not self.is_valid():
             return
         self.registry.pop(self.view.id(), None)
         self._write("\n\n# --- User ---\n")
@@ -589,3 +615,15 @@ class AgentModelChatCommand(sublime_plugin.WindowCommand):
     def _load_models(self):
         return sublime.load_settings("Agentic.sublime-settings").get("models")
 
+
+class ViewCloseHandler(sublime_plugin.EventListener):
+    """
+    Close stream when tab (view) closes
+    """
+    def on_close(self, view):
+        if view.settings().get("is_streaming"):
+            task = _ACTIVE_STREAMERS.get(view.id())
+            if task:
+                task.cancel()
+            else:
+                view.settings().set("is_streaming", False)
