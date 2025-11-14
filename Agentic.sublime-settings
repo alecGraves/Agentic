@@ -185,7 +185,7 @@
 		],
 		"<<": [
 			"\u00ab",  // « LEFT‑POINTING DOUBLE ANGLE QUOTATION MARK
-			"\u300a",  //《 LEFT WHITE ANGLE BRACKET
+			"\u300a",  // 《 LEFT WHITE ANGLE BRACKET
 		],
 
 		// WHITESPACE (everything that should become a plain ASCII space)
@@ -230,7 +230,6 @@
 			"\uFF09",  // ） FULLWIDTH RIGHT PARENTHESIS
 			"\u207e",  // ⁾ SUPERSCRIPT RIGHT PARENTHESIS
 			"\u208e",  // ₎ SUBSCRIPT RIGHT PARENTHESIS
-			"\uFE5B",  // ﹛ SMALL RIGHT PARENTHESIS (actually U+FE5A, but kept for safety)
 			"\uFE5A",  // ﹚ MEDIUM RIGHT PARENTHESIS
 		],
 
@@ -247,11 +246,13 @@
 		// SQUARE BRACKETS
 		"[": [
 			"\uFF3B",  // ［ FULLWIDTH LEFT SQUARE BRACKET
-			"\u3014",  // 【 LEFT WHITE SQUARE BRACKET
+			"\u3010",  // 【 LEFT WHITE SQUARE BRACKET
+			"\u3014",  // 〔 LEFT WHITE SQUARE BRACKET
 		],
 		"]": [
 			"\uFF3D",  // ］ FULLWIDTH RIGHT SQUARE BRACKET
-			"\u3015",  // 】 RIGHT WHITE SQUARE BRACKET
+			"\u3011",  // 】 RIGHT WHITE SQUARE BRACKET
+			"\u3015",  // 〕 RIGHT WHITE SQUARE BRACKET
 		],
 
 		// ANGLE BRACKETS / COMPARISON SIGNS
@@ -303,11 +304,24 @@
 			"\u29F9",  // ⧹ REVERSE SOLIDUS
 			"\u20E5",  // ⃥ COMBINING REVERSE SOLIDUS OVERLAY (rare)
 		],
+		"|": [
+			"\u007c",  // | VERTICAL LINE (canonical)
+			"\uFF5C",  // ｜ FULLWIDTH VERTICAL LINE (CJK typography)【8】【9】
+			"\u2502",  // │ BOX DRAWINGS LIGHT VERTICAL (terminal/UI graphics)【10】【11】
+			"\u2503",  // ┃ BOX DRAWINGS HEAVY VERTICAL (thicker variant)【12】【13】
+		],
+		"^": [
+			"\u005e",  // ^ CIRCUMFLEX ACCENT (canonical)
+			"\uFF3E",  // ＾ FULLWIDTH CIRCUMFLEX ACCENT (CJK typography)【0】【1】
+			"\u02C6",  // ˆ MODIFIER LETTER CIRCUMFLEX ACCENT (phonetic use)【2】【3】
+			"\u2303",  // ⌃ UP ARROWHEAD (caret-shaped symbol)【4】【5】
+			"\u2227",  // ∧ LOGICAL AND (mathematical operator with caret shape)【6】【7】
+		],
 		"=": [
 			"\uFF1D", // ＝ FULLWIDTH EQUALS SIGN
 		],
-		":=": ["\u2254"],
-		"=:": ["\u2255"],
+		":=": ["\u2254"], // ≔
+		"=:": ["\u2255"], // ≕
 
 		// EXCLAMATION MARKS
 		"!": [
@@ -327,12 +341,21 @@
 			"\u037E", // ; GREEK QUESTION MARK (visually a semicolon)
 			"\uFE14", // ︔ PRESENTATION FORM FOR VERTICAL SEMICOLON
 		],
+		":": [
+			"\u003a",  // : COLON (canonical)
+			"\uFF1A",  // ： FULLWIDTH COLON (used in East Asian typography)【0】【1】
+			"\uFE13",  // ︓ PRESENTATION FORM FOR VERTICAL COLON (vertical text layout)【2】【3】
+			"\uFE55",  // ﹕ SMALL COLON (small form variant)【4】【5】
+			"\uA789",  // ꞉ MODIFIER LETTER COLON (phonetic transcription)【6】【7】
+		],
 
 		// COMMA
 		",": [
 			"\u002c",  // , COMMA
+			"\u02CC",  // ˌ MODIFIER LETTER LOW VERTICAL LINE (secondary stress mark)【16】【17】
 			"\u201a",  // ‚ SINGLE LOW-9 QUOTATION MARK
 			"\uFF0c",  // ， FULLWIDTH COMMA
+
 		],
 
 		// PERIOD / DOT(s)
@@ -383,16 +406,16 @@
 		">=": ["\u2265"], // ≥
 		"!=": ["\u2260"], // ≠
 
-		// Numbers (gpt-oss uses these often)
-		"0.": ["\u0030\uFE0F\u20E3"],
-		"1.": ["\u0031\uFE0F\u20E3"],
-		"2.": ["\u0032\uFE0F\u20E3"],
-		"3.": ["\u0033\uFE0F\u20E3"],
-		"4.": ["\u0034\uFE0F\u20E3"],
-		"5.": ["\u0035\uFE0F\u20E3"],
-		"6.": ["\u0036\uFE0F\u20E3"],
-		"7.": ["\u0037\uFE0F\u20E3"],
-		"8.": ["\u0038\uFE0F\u20E3"],
-		"9.": ["\u0039\uFE0F\u20E3"],
+		// Numbers (gpt-oss writes these often)
+		"0.": ["\u0030\uFE0F\u20E3"], // 0️⃣
+		"1.": ["\u0031\uFE0F\u20E3"], // 1️⃣
+		"2.": ["\u0032\uFE0F\u20E3"], // 2️⃣
+		"3.": ["\u0033\uFE0F\u20E3"], // 3️⃣
+		"4.": ["\u0034\uFE0F\u20E3"], // 4️⃣
+		"5.": ["\u0035\uFE0F\u20E3"], // 5️⃣
+		"6.": ["\u0036\uFE0F\u20E3"], // 6️⃣
+		"7.": ["\u0037\uFE0F\u20E3"], // 7️⃣
+		"8.": ["\u0038\uFE0F\u20E3"], // 8️⃣
+		"9.": ["\u0039\uFE0F\u20E3"], // 9️⃣
 	},
 }
