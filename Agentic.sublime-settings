@@ -2,7 +2,15 @@
 	// Default values that the user can override
 	"default_prompt": "You are an expert programming agent. Focus on correctness and simplicity.",
 	"default_models": "models_high",
+
+	// Enable output of reasoning tokens
 	"show_reasoning": true,
+
+	// Sanitize when you copy from a chat document
+	"sanitize_on_copy": true,
+
+	// Sanitize ALL model outputs (breaks caching)
+	"sanitize_output": false,
 
 	// Actions take the currently selected code (or entire file if no code is selected)
 	//  and send it to the LLM to evaluate with a custom prompt.
@@ -129,5 +137,262 @@
 			"effort": 512.0,
 			"cost": 0.042
 		},
-	}
+	},
+
+	// rename these lookalikes if sanitize_output=true
+	"sanitize_dict": {
+		// SINGLE QUOTE
+		"'": [
+			"\u2019",  // ’ RIGHT SINGLE QUOTATION MARK
+			"\u2018",  // ‘ LEFT SINGLE QUOTATION MARK
+			"\u201b",  // ‛ SINGLE HIGH-9 QUOTATION MARK
+			"\u00b4",  // ´ ACUTE ACCENT
+			"\u2032",  // ′ PRIME
+			"\u02bc",  // ʼ MODIFIER LETTER APOSTROPHE
+			"\u02c8",  // ˈ MODIFIER LETTER VERTICAL LINE
+			"\u02ca",  // ˊ MODIFIER LETTER ACUTE ACCENT
+			"\u02bb",  // ʻ MODIFIER LETTER TURNED COMMA
+		],
+		"`": [
+			"\u2035",  // ‵ REVERSED PRIME
+			"\u0060",  // ` GRAVE ACCENT
+		],
+		"": [  // remove these
+			"\u200b",  // ZERO-WIDTH SPACE
+			"\u200c",  // ZERO-WIDTH NON-JOINER
+			"\u200d",  // ZERO-WIDTH JOINER
+			"\u200e",  // LEFT-TO-RIGHT MARK
+			"\u200f",  // RIGHT-TO-LEFT MARK
+		],
+
+		// DOUBLE QUOTE
+		"\"": [
+			"\u201c",  // “ LEFT DOUBLE QUOTATION MARK
+			"\u201d",  // ” RIGHT DOUBLE QUOTATION MARK
+			"\u201e",  // „ DOUBLE LOW-9 QUOTATION MARK
+			"\u201f",  // ‟ DOUBLE HIGH-REVERSED-9 QUOTATION MARK
+			"\u301d",  //〝 LEFT DOUBLE QUOTATION MARK (FULLWIDTH)
+			"\u301e",  // 〞 RIGHT DOUBLE QUOTATION MARK (FULLWIDTH)
+			"\u275d",  // ❝ HEAVY DOUBLE TURNED COMMA QUOTATION MARK ORNAMENT
+			"\u275e",  // ❞ HEAVY DOUBLE COMMA QUOTATION MARK ORNAMENT
+			"\uFF02",  // ＂ FULLWIDTH QUOTATION MARK
+		],
+
+		// SHIFT OPERATORS
+		">>": [
+			"\u00bb",  // » RIGHT‑POINTING DOUBLE ANGLE QUOTATION MARK
+			"\u300b",  // 》 RIGHT WHITE ANGLE BRACKET
+		],
+		"<<": [
+			"\u00ab",  // « LEFT‑POINTING DOUBLE ANGLE QUOTATION MARK
+			"\u300a",  //《 LEFT WHITE ANGLE BRACKET
+		],
+
+		// WHITESPACE (everything that should become a plain ASCII space)
+		" ": [
+			"\u00a0",  // NO‑BREAK SPACE
+			"\u2000",  // EN QUAD
+			"\u2001",  // EM QUAD
+			"\u2002",  // EN SPACE
+			"\u2003",  // EM SPACE
+			"\u2004",  // THREE‑PER‑EM SPACE
+			"\u2005",  // FOUR‑PER‑EM SPACE
+			"\u2006",  // SIX‑PER‑EM SPACE
+			"\u2007",  // FIGURE SPACE
+			"\u2008",  // PUNCTUATION SPACE
+			"\u2009",  // THIN SPACE
+			"\u200a",  // HAIR SPACE
+			"\u202f",  // NARROW NO‑BREAK SPACE
+			"\u205f",  // MEDIUM MATHEMATICAL SPACE
+			"\u3000",  // IDEOGRAPHIC SPACE
+			"\u1680",  // OGHAM SPACE MARK
+			"\u180e",  // MONGOLIAN VOWEL SEPARATOR
+			"\u200b",  // ZERO‑WIDTH SPACE
+			"\u200c",  // ZERO‑WIDTH NON‑JOINER
+			"\u200d",  // ZERO‑WIDTH JOINER
+			"\u200e",  // LEFT‑TO‑RIGHT MARK
+			"\u200f",  // RIGHT‑TO‑LEFT MARK
+			"\u2028",  // LINE SEPARATOR
+			"\u2029",  // PARAGRAPH SEPARATOR
+		],
+
+		// PARENTHESES
+		"(": [
+			"\uFF08",  // （ FULLWIDTH LEFT PARENTHESIS
+			"\u207d",  // ⁽ SUPERSCRIPT LEFT PARENTHESIS
+			"\u208d",  // ₍ SUBSCRIPT LEFT PARENTHESIS
+			"\u239b",  // ⎛ LEFT PARENTHESIS WITH TICK
+			"\u239d",  // ⎝ LEFT PARENTHESIS WITH TICK (alternate)
+			"\uFE59",  // ﹙ SMALL LEFT PARENTHESIS
+			"\uFE5A",  // ﹚ MEDIUM LEFT PARENTHESIS
+		],
+		")": [
+			"\uFF09",  // ） FULLWIDTH RIGHT PARENTHESIS
+			"\u207e",  // ⁾ SUPERSCRIPT RIGHT PARENTHESIS
+			"\u208e",  // ₎ SUBSCRIPT RIGHT PARENTHESIS
+			"\uFE5B",  // ﹛ SMALL RIGHT PARENTHESIS (actually U+FE5A, but kept for safety)
+			"\uFE5A",  // ﹚ MEDIUM RIGHT PARENTHESIS
+		],
+
+		// CURLY BRACKETS
+		"{": [
+			"\uFF5B",  // ｛ FULLWIDTH LEFT CURLY BRACKET
+			"\uFE5B",  // ﹛ SMALL LEFT CURLY BRACKET
+		],
+		"}": [
+			"\uFF5D",  // ｝ FULLWIDTH RIGHT CURLY BRACKET
+			"\uFE5C",  // ﹜ SMALL RIGHT CURLY BRACKET
+		],
+
+		// SQUARE BRACKETS
+		"[": [
+			"\uFF3B",  // ［ FULLWIDTH LEFT SQUARE BRACKET
+			"\u3014",  // 【 LEFT WHITE SQUARE BRACKET
+		],
+		"]": [
+			"\uFF3D",  // ］ FULLWIDTH RIGHT SQUARE BRACKET
+			"\u3015",  // 】 RIGHT WHITE SQUARE BRACKET
+		],
+
+		// ANGLE BRACKETS / COMPARISON SIGNS
+		"<": [
+			"\uFF1C",  // ＜ FULLWIDTH LESS‑THAN SIGN
+			"\u003c",  // < LESS‑THAN SIGN (canonical – kept for completeness)
+			"\u2329",  // 〈 LEFT ANGLE BRACKET
+			"\u3008",  // 〈 LEFT ANGLE BRACKET
+		],
+		">": [
+			"\uFF1E",  // ＞ FULLWIDTH GREATER‑THAN SIGN
+			"\u003e",  // > GREATER‑THAN SIGN (canonical)
+			"\u232a",  // 〉 RIGHT ANGLE BRACKET
+			"\u3009",  // 〉 RIGHT ANGLE BRACKET
+		],
+
+		// MATH / ARITHMETIC OPERATORS
+		"+": [
+			"\u002b",  // + PLUS SIGN (canonical)
+			"\uFF0B",  // ＋ FULLWIDTH PLUS SIGN
+		],
+		"-": [
+			"\u002d",  // - HYPHEN‑MINUS
+			"\u2212",  // − MINUS SIGN
+			"\u2010",  // ‐ HYPHEN
+			"\u2011",  // ‑ NON‑BREAKING HYPHEN
+			"\u2012",  // ‒ FIGURE DASH
+			"\u2013",  // – EN DASH
+			"\u2014",  // — EM DASH
+			"\u2015",  // ― HORIZONTAL BAR
+		],
+		"*": [
+			"\u002a",  // * ASTERISK
+			"\u00d7",  // × MULTIPLICATION SIGN
+			"\u2217",  // ∗ ASTERISK OPERATOR
+			"\u2219",  // ∙ BULLET OPERATOR
+		],
+		"/": [
+			"\u002f",  // / SOLIDUS
+			"\u00f7",  // ÷ DIVISION SIGN
+			"\u2215",  // ∕ DIVISION SLASH
+			"\uFF0F",  // ／ FULLWIDTH SOLIDUS
+		],
+		"\\": [          // BACKSLASH (reverse solidus)
+			"\uFF3C",  // ＼ FULLWIDTH REVERSE SOLIDUS
+			"\uFE68",  // ﹨ SMALL REVERSE SOLIDUS
+			"\u2216",  // ∖ SET MINUS (looks like a backslash)
+			"\u29F5",  // ⧵ REVERSE SOLIDUS OPERATOR
+			"\u29F9",  // ⧹ REVERSE SOLIDUS
+			"\u20E5",  // ⃥ COMBINING REVERSE SOLIDUS OVERLAY (rare)
+		],
+		"=": [
+			"\uFF1D", // ＝ FULLWIDTH EQUALS SIGN
+		],
+		":=": ["\u2254"],
+		"=:": ["\u2255"],
+
+		// EXCLAMATION MARKS
+		"!": [
+			"\u0021",  // ! EXCLAMATION MARK
+			"\uFF01",  // ！ FULLWIDTH EXCLAMATION MARK
+			"\u2757",  // ❗ HEAVY EXCLAMATION MARK
+			"\u2763",  // ❣ HEAVY HEART EXCLAMATION MARK (optional)
+		],
+		"!!": [
+			"\u203c",  // ‼ DOUBLE EXCLAMATION MARK
+		],
+
+		// SEMICOLON (with great power...)
+		";": [
+			"\u003b", // ; SEMICOLON (canonical – kept for completeness)
+			"\uFF1B", // ； FULLWIDTH SEMICOLON
+			"\u037E", // ; GREEK QUESTION MARK (visually a semicolon)
+			"\uFE14", // ︔ PRESENTATION FORM FOR VERTICAL SEMICOLON
+		],
+
+		// COMMA
+		",": [
+			"\u002c",  // , COMMA
+			"\u201a",  // ‚ SINGLE LOW-9 QUOTATION MARK
+			"\uFF0c",  // ， FULLWIDTH COMMA
+		],
+
+		// PERIOD / DOT(s)
+		".": [
+			"\u002e",  // . FULL STOP
+			"\u2024",  // ․ ONE DOT LEADER
+			"\uFF0e",  // ． FULLWIDTH FULL STOP
+			"\uFF61",  // ｡ HALFWIDTH IDEOGRAPHIC FULL STOP
+		],
+		"..": [
+			"\u2025",  // ‥ TWO DOT LEADER
+		],
+		"...": [
+			"\u2026",  // … HORIZONTAL ELLIPSIS
+		],
+
+		// QUESTION MARK
+		"?": [
+			"\u003f",  // ? QUESTION MARK
+			"\u2047",  // ? (DOUBLE QUESTION MARK)
+			"\uFF1F",  // ？ FULLWIDTH QUESTION MARK
+			"\u2753",  // ❓ HEAVY QUESTION MARK
+		],
+		"??": [
+			"\u2047",  // ⁇ combined
+		],
+		"?!": [
+			"\u2048",  // ⁈ INTERROBANG
+		],
+
+		// NEWLINE (everything that should be treated as “line‑feed”)
+		"\n": [
+			"\u000a",  // LF
+			"\u0085",  // NEL
+			"\u2028",  // LINE SEPARATOR
+			"\u2029",  // PARAGRAPH SEPARATOR
+			"\u000c",  // FORM FEED
+			"\u000b",  // VERTICAL TAB
+		],
+
+		// Misc
+		"->":  ["\u2192"], // →
+		"<-": ["\u2190"], // ←
+		"<->": ["\u2194"], // ↔
+		"=>": ["\u21D2"], // ⇒
+		"<=>": ["\u21D4"], // ⇔
+		"<=": ["\u2264"], // ≤
+		">=": ["\u2265"], // ≥
+		"!=": ["\u2260"], // ≠
+
+		// Numbers (gpt-oss uses these often)
+		"0.": ["\u0030\uFE0F\u20E3"],
+		"1.": ["\u0031\uFE0F\u20E3"],
+		"2.": ["\u0032\uFE0F\u20E3"],
+		"3.": ["\u0033\uFE0F\u20E3"],
+		"4.": ["\u0034\uFE0F\u20E3"],
+		"5.": ["\u0035\uFE0F\u20E3"],
+		"6.": ["\u0036\uFE0F\u20E3"],
+		"7.": ["\u0037\uFE0F\u20E3"],
+		"8.": ["\u0038\uFE0F\u20E3"],
+		"9.": ["\u0039\uFE0F\u20E3"],
+	},
 }

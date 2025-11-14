@@ -1,4 +1,4 @@
-# Agentic – LLM Agents for Sublime Text 🤖
+# Agentic - LLM Agents for Sublime Text 🤖
 A lightweight [Sublime Text](https://www.sublimetext.com/) plugin that lets you concurrently command multiple local or remote LLMs.
 
 ## Introduction 🖊
@@ -28,10 +28,11 @@ This plugin currently has four major command palette actions:
 - `AI Agent Model Chat` - takes highlighted text and starts a new chat session with the selected model
 - `AI Agent Chat Submit` - will send the contents of a chat file to an LLM for a chat-like interface (triggered with `[ctrl/cmd]+[enter]` from a chat file; `[c]` or `[esc]` to interrupt)
 
-There are also several supplemental palette actions to help control chats
+There are also several supplemental palette actions to help work with chats
 - `AI Agent Clear Reasoning` - deletes model 'reasoning' output from chat files
 - `AI Agent Clone Chat` - creates a copy of an existing chat
 - `AI Agent New Chat` - creates a new chat file
+- `AI Agent Sanitize` - strip LLM unicode from selection or file
 
 For settings, there is a convenience command:
 - `AI Agent Settings` which will open your configuration file `Agentic.sublime-settings`.
@@ -70,16 +71,16 @@ For settings, there is a convenience command:
 }
 ```
 * Models are organized through a list of model names in the settings (`"models_high": [...]`)
-* Each model has a name (`"high_1"`, `"high_1"`, `"my-model"`, etc.)
-* The `"model"` name should match what the API provider requres (example below)
+* Each model has a name (`"local-20b-high1"`, `"local-20b-high2"`, `"my-model"`, etc.)
+* The `"model":...` field in the dict should match what the API provider requres (example below)
 * Include a token for paid APIs
-* Any additional model API parameters are placed in `"options"`
+* Any additional model API parameters are placed in the `"options"...` field
 * `"context"` = Approximate usable context length
 * `"system"` = A unique resource id (for local systems)
 * `"workers"` = Number of concurrent requests supported on the system
 * `"speed"` = Approximate tokens per second
 * `"effort"` = Typical number of tokens used to solve an average problem
-* `"cost"` = $ USD per million generated tokens (electricity cost for local GPT-OSS-20B)
+* `"cost"` = $ USD per million generated tokens (electricity cost for local GPT-OSS-20B above)
 
 **Common Model Configuration Errors** (see errors in sublime console using ```[ctrl/cmd] + [`]``` or `View` > `Show Console`):
 * `HTTP Error 400: Bad Request` - bad `"options"` for the model
@@ -134,7 +135,7 @@ Configuring user-defined actions (`AI Agent Settings` / `Agentic.sublime-setting
 	"cost": 0.75,
 },
 ```
-* ^ This model is integrated with tools, enabling web search ([Tavily](https://www.tavily.com/)), single-page website download, and sandboxed cloud code evaluation, streamed directly back into Sublime Text. Raw results from these actions are output as 'reasoning' tokens.
+* This model is integrated with tools, enabling web search ([Tavily](https://www.tavily.com/)), single-page website download, and sandboxed cloud code evaluation, streamed directly back into Sublime Text. Raw results from these actions are output as 'reasoning' tokens.
 
 **Example Model configuration - Google (TPU) Gemini 2.5 Pro:** 🏋
 ```JSON
@@ -174,7 +175,7 @@ Configuring user-defined actions (`AI Agent Settings` / `Agentic.sublime-setting
 	"cost": 11.25
 },
 ```
-- ^ Note, for `gpt-5` and `gpt-5-mini`, `"stream": true` does not work unless you verify your ID. `gpt-5-nano` streaming always works though.
+- Note: for `gpt-5` and `gpt-5-mini`, `"stream": true` does not work unless you verify your ID. `gpt-5-nano` streaming always works though.
 
 ### Customizing user actions
 **Example "haiku" action:**
@@ -192,6 +193,16 @@ Configuring user-defined actions (`AI Agent Settings` / `Agentic.sublime-setting
 * `"models"` should be the name of list of models to use (see model configuration)
 * `"system"` is the system prompt to use for the action
 * `"prompt"` is the user prompt to use for the action
+
+### Sanitizing LLM Outputs
+LLMs tend to generate unnecessary unicode outputs.
+Agentic can 'sanitize' generated text to remove or replace invisible unicode characters, em-dashes, and anything else you configure.
+This is done by default when copying from a chat file.
+
+The following settings (`AI Agent Settings` / `Agentic.sublime-settings`) can be modified to control sanitization behavior:
+- `"sanitize_on_copy"`: Whether to sanitize when you copy text from a chat file
+- `"sanitize_output"`: Whether to sanitize all LLM outputs as they are streamed (this breaks LLM history caching)
+- `"sanitize_dict"`: Customizable dictionary of strings to replace - `"desired": ["unicode"]`
 
 ## Installation 📂
 You can install this plugin by saving it in your `Packages` folder:
@@ -215,8 +226,9 @@ Currently, this plugin supports chat incorporating user-highlighted code for con
 - [x] User-defined chat actions
 - [x] Multiple local LLM support
 - [x] Accelerator APIs ([groq](https://groq.com/), [Google TPU](https://cloud.google.com/blog/products/compute/inside-the-ironwood-tpu-codesigned-ai-stack))
+- [x] Sanitize LLM output - replace unnecessary unicode
 - [ ] Function calling
-- [ ] Multi-agent workflows (e.g. generate then reduce/combine)
+- [ ] Multi-agent workflows (e.g. generate then reduce/combine best solutions)
 
 ## License ⚖
 This project is released under 🔥 ⚖ The Unlicense ⚖ 🔥

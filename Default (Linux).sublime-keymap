@@ -15,18 +15,38 @@
     },
     {
         "keys": ["ctrl+enter"],
-        "command": "cancel_stream",
-        "context": [
-            { "key": "setting.is_agent_chat", "operand": true },
-            { "key": "setting.is_streaming", "operand": true }
-        ]
-    },
-    {
-        "keys": ["ctrl+enter"],
         "command": "agent_chat",
         "context": [
             { "key": "setting.is_agent_chat", "operand": true },
             { "key": "setting.is_streaming", "operand": false }
+        ]
+    },
+    {
+        "keys": ["ctrl+c"],
+        "command": "agentic_copy", // Sanitize copy (if sanitize_on_copy=true)
+        "context": [
+            { "key": "setting.is_agent_chat", "operand": true },
+        ]
+    },
+    {
+        "keys": ["ctrl+shift+c"], // Exact copy
+        "command": "copy",
+        "context": [
+            { "key": "setting.is_agent_chat", "operand": true },
+        ]
+    },
+    {
+        "keys": ["ctrl+x"],
+        "command": "agentic_cut", // Sanitize cut (if sanitize_on_copy=true)
+        "context": [
+            { "key": "setting.is_agent_chat", "operand": true },
+        ]
+    },
+    {
+        "keys": ["ctrl+shift+x"], // Exact cut
+        "command": "cut",
+        "context": [
+            { "key": "setting.is_agent_chat", "operand": true },
         ]
     }
 ]

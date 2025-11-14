@@ -2,46 +2,47 @@
 # -------------------------------------------------------------
 #  Agentic AI plugin: four primary commands
 #
-#  * AI Agent        – Execute an arbitrary prompt providing a code
+#  * AI Agent        - Execute an arbitrary prompt providing a code
 #                       snippet or file
 #
-#  * AI Agent Action – Execute user-defined custom agent action
+#  * AI Agent Action - Execute user-defined custom agent action
 #                       on a custom code section.
 #
-#  * AI Agent Model Chat  – Start a chat with a specific model,
+#  * AI Agent Model Chat  - Start a chat with a specific model,
 #                            optionally with a code snippet
 #
-#  * AI Agent Chat   – Stream on an existing chat view that already
+#  * AI Agent Chat   - Stream on an existing chat view that already
 #                       contains the tags "# --- System ---",
 #                       "# --- User ---", "# --- Agent ---".
 #                       Run with [ctrl/cmd] + [enter] in a chat file.
 #
 #  Supplemental chat management commands
 #
-#  * AI Agent Clear Reasoning  – Erase reasoning output from a chat
+#  * AI Agent Clear Reasoning  - Erase reasoning output from a chat
 #
-#  * AI Agent Clone Chat  – Create a copy of the current chat
+#  * AI Agent Clone Chat  - Create a copy of the current chat
 #
-#  * AI Agent New Chat    – Prepare a new chat file
+#  * AI Agent New Chat    - Prepare a new chat file
 #
-#  All API call logic lives in `chat_stream()` – the single code
+#  All API call logic lives in `chat_stream()` - the single code
 #  path used by all three commands.
 #
 #  The plugin uses only Python features available in older
-#  Sublime Text builds (no f‑string syntax, only .format()).
+#  Sublime Text builds (no f-string syntax, only .format()).
 # -------------------------------------------------------------
 
 import json
 import urllib.request
 import threading
 import random
+import re
 
 import sublime
 import sublime_plugin
 
 CHARS_PER_TOKEN = 4.4  # Based on python+english data
 
-# Registry of ongoing streams: view.id() → StreamingTask
+# Registry of ongoing streams: view.id() -> StreamingTask
 _ACTIVE_STREAMERS = {}
 
 # Tags for chat file
@@ -50,6 +51,10 @@ TAG_MAP = {
     "user": "# --- User ---",
     "assistant": "# --- Agent ---",
 }
+
+_LAST_SANITIZE_DICT_RAW = None
+_SANITIZE_DICT = None
+_SANITIZE_RE = None
 
 
 def _pick_model(capability=None):
@@ -91,7 +96,7 @@ def chat_stream(messages, model, cancel=None):
     """
     Query an OpenAI server given messages and a model configuration.
     Yields `(is_reasoning, text)` for incremental stream chunks.
-    At the end yields a 4‑tuple of timing metrics:
+    At the end yields a 4-tuple of timing metrics:
         (cache_n, prompt_n, prompt_per_second, predicted_per_second).
     """
     url = model.get("url")
@@ -110,7 +115,7 @@ def chat_stream(messages, model, cancel=None):
 
     stream = body.get("stream", False)
 
-    data = json.dumps(body).encode("utf‑8")
+    data = json.dumps(body).encode("utf-8")
     req = urllib.request.Request(
         url,
         data=data,
@@ -139,7 +144,7 @@ def chat_stream(messages, model, cancel=None):
         for raw in resp:
             if cancel and cancel.is_set():
                 return
-            line = raw.decode("utf‑8").strip()
+            line = raw.decode("utf-8").strip()
             if not line.startswith("data: "):
                 continue
             payload = line[6:]
@@ -169,7 +174,7 @@ def chat_stream(messages, model, cancel=None):
 
 
 class AgentStreamingTask(threading.Thread):
-    """Background worker – streams into the view"""
+    """Background worker - streams into the view"""
 
     def __init__(self, view, messages, registry):
         super().__init__(daemon=True)
@@ -177,6 +182,10 @@ class AgentStreamingTask(threading.Thread):
         self.messages = messages
         self.registry = registry
         self._cancel_event = threading.Event()
+        self.sanitize = sublime.load_settings(
+            "Agentic.sublime-settings").get("sanitize_output")
+        if self.sanitize:
+            _update_sanitize_dict()
         self.show_reasoning = sublime.load_settings(
             "Agentic.sublime-settings").get("show_reasoning")
         self._buffer = []       # pending writes
@@ -206,7 +215,7 @@ class AgentStreamingTask(threading.Thread):
 
         try:
             for chunk in chat_stream(self.messages, model, self._cancel_event):
-                # Normal (2‑tuple) chunk vs. metrics (4‑tuple)
+                # Normal (2-tuple) chunk vs. metrics (4-tuple)
                 if len(chunk) == 2:
                     is_reasoning, text = chunk
                 else:
@@ -274,9 +283,13 @@ class AgentStreamingTask(threading.Thread):
         if not parts:
             return
 
+        out_string = "".join(parts[::-1])
+        if self.sanitize:
+            out_string = _sanitize_text(out_string)
+
         self.view.run_command(
             "append",
-            {"characters": "".join(parts[::-1])}  # restore original order
+            {"characters": out_string}  # restore original order
         )
 
     def _finalize(self):
@@ -288,7 +301,7 @@ class AgentStreamingTask(threading.Thread):
 
 
 def start_streaming(view, messages, model_name=None):
-    """Public helper – start a streaming task on a view"""
+    """Public helper - start a streaming task on a view"""
     view.settings().set("is_streaming", True)
     if model_name:
         view.settings().set("agent_model", model_name)
@@ -405,7 +418,7 @@ def _read_selection(view):
 
 
 class PromptInputHandler(sublime_plugin.TextInputHandler):
-    """Input handler – free‑form prompt for AgentCodeCommand"""
+    """Input handler - free-form prompt for AgentCodeCommand"""
     def placeholder(self):
         return "Enter command string"
 
@@ -627,3 +640,132 @@ class ViewCloseHandler(sublime_plugin.EventListener):
                 task.cancel()
             else:
                 view.settings().set("is_streaming", False)
+
+
+def _update_sanitize_dict():
+    global _LAST_SANITIZE_DICT_RAW
+    global _SANITIZE_DICT
+    global _SANITIZE_RE
+
+    all_sanitize = sublime.load_settings("Agentic.sublime-settings").get("sanitize_dict")
+    # {canonical: [look-alikes]}
+
+    # Do nothing if dict is the same.
+    if _LAST_SANITIZE_DICT_RAW is not None \
+            and all_sanitize == _LAST_SANITIZE_DICT_RAW:
+        return
+
+    _SANITIZE_DICT = {}
+    for _canonical, _alts in all_sanitize.items():
+        for _ch in _alts:
+            _SANITIZE_DICT[_ch] = _canonical
+
+    _SANITIZE_RE = re.compile(
+        "|".join(sorted(map(re.escape, _SANITIZE_DICT), key=len, reverse=True))
+    )
+    _LAST_SANITIZE_DICT_RAW = all_sanitize
+
+
+
+def _sanitize_text(text: str) -> str:
+    """
+    Replace Unicode look-alike in *text* with its ASCII canonical value
+    """
+    # `sub` receives each match; we look up the canonical character
+    # in the flat map we built above.
+    return _SANITIZE_RE.sub(lambda m: _SANITIZE_DICT[m.group(0)], text)
+
+
+class AgentSanitizeCommand(sublime_plugin.TextCommand):
+    """Sanitize the whole document or the selected text."""
+    def run(self, edit):
+        _update_sanitize_dict()
+        view = self.view
+
+        #  1.  If there is at least one non-empty selection - sanitize it.
+        sel = view.sel()
+        if any(not r.empty() for r in sel):
+            # Replace each selected region independently.
+            # Iterate from the end so that earlier offsets stay valid.
+            for r in reversed(list(sel)):
+                if r.empty():
+                    continue
+                selected_text = view.substr(r)
+                sanitized = _sanitize_text(selected_text)
+                view.replace(edit, r, sanitized)
+            sublime.status_message("Selection sanitized")
+            return
+
+        #  2. No selection - sanitize the entire document.
+        region = sublime.Region(0, view.size())
+        text = view.substr(region)
+
+        if not text:
+            sublime.status_message("Document is empty - nothing to sanitize")
+            return
+
+        sanitized = _sanitize_text(text)
+        view.replace(edit, region, sanitized)
+        sublime.status_message("Document sanitized")
+
+
+class AgenticCopyCommand(sublime_plugin.TextCommand):
+    """Sanitizes AI outputs (removes extra unicode based on settings)"""
+    def run(self, edit):
+        do_clean = sublime.load_settings("Agentic.sublime-settings").get("sanitize_on_copy")
+
+        # Standard copy if sanitize_on_copy is false
+        if not do_clean:
+            self.view.run_command("copy")
+            return
+
+        _update_sanitize_dict()
+        view = self.view
+        pieces = []
+        for region in view.sel():
+            if region.empty():
+                raw = view.substr(view.line(region))
+            else:
+                raw = view.substr(region)
+            pieces.append(raw)
+        out = _sanitize_text("\n".join(pieces))
+        sublime.set_clipboard(out)
+        end = "" if len(out) == 1 else "s"
+        sublime.status_message("Sanitized + Copied {} character{}".format(len(out), end))
+
+class AgenticCutCommand(sublime_plugin.TextCommand):
+    """Sanitizes AI outputs and cuts the selection (copy + delete)."""
+    def run(self, edit):
+        # Use the same setting that controls copy sanitization
+        do_clean = sublime.load_settings("Agentic.sublime-settings").get("sanitize_on_copy")
+
+        # Standard cut if sanitization is disabled
+        if not do_clean:
+            self.view.run_command("cut")
+            return
+
+        # Sanitize the selected text and put it on the clipboard
+        _update_sanitize_dict()
+        view = self.view
+        pieces = []
+        for region in view.sel():
+            if region.empty():
+                raw = view.substr(view.line(region))
+            else:
+                raw = view.substr(region)
+            pieces.append(raw)
+        out = _sanitize_text("\n".join(pieces))
+        sublime.set_clipboard(out)
+
+        # Delete the original selection(s)
+        delete_regions = []
+        for region in view.sel():
+            delete_regions.append(view.line(region) if region.empty() else region)
+
+        # Delete from the end to the start so offsets don't shift
+        for region in sorted(delete_regions, key=lambda r: r.begin(), reverse=True):
+            view.erase(edit, region)
+
+        # Status feedback
+        end = "" if len(out) == 1 else "s"
+        sublime.status_message("Sanitized + Cut {} character{}".format(len(out), end))

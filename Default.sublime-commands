@@ -28,6 +28,10 @@
         "command": "agent_clear_reasoning"
     },
     {
+        "caption": "AI Agent Sanitize",
+        "command": "agent_sanitize"
+    },
+    {
         "caption": "AI Agent Settings",
         "command": "edit_settings",
         "args": {
