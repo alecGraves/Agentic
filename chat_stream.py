@@ -666,7 +666,6 @@ def _update_sanitize_dict():
     _LAST_SANITIZE_DICT_RAW = all_sanitize
 
 
-
 def _sanitize_text(text: str) -> str:
     """
     Replace Unicode look-alike in *text* with its ASCII canonical value
@@ -732,6 +731,7 @@ class AgenticCopyCommand(sublime_plugin.TextCommand):
         sublime.set_clipboard(out)
         end = "" if len(out) == 1 else "s"
         sublime.status_message("Sanitized + Copied {} character{}".format(len(out), end))
+
 
 class AgenticCutCommand(sublime_plugin.TextCommand):
     """Sanitizes AI outputs and cuts the selection (copy + delete)."""
