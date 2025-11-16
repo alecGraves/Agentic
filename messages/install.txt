@@ -19,11 +19,13 @@
     * `AI Agent Sanitize` - Strip unwanted Unicode from a selection or file.
     * `AI Agent Settings` - Open `Agentic.sublime-settings` configuration.
 
-3. **Hotkeys (use in a chat file)**
-   * `Ctrl+Enter` / `⌘+Enter` - Submit a chat file to the LLM.
-   * `Esc` or `c` while editing a chat file - Interrupt an ongoing request.
+3. Run a command, e.g. highlight a code block and choose **AI Agent** and write an action to perform.
+   * The plugin will stream the response directly into a new chat file.
 
-4. Run a command, e.g. highlight a code block and choose **AI Agent**.
-   The plugin will stream the response directly into a new or existing chat file.
+4. Use **Hotkeys** in a chat file
+   * `Ctrl+Enter` / `⌘+Enter` - Submit a chat file to the LLM.
+   * `Esc` or `c` while streaming LLM output to a chat file - Interrupt an ongoing request.
+
+5. Define custom "actions" to quickly launch LLM tasks with specific models in `Agentic.sublime-settings`
 
 Happy Agentic coding! 🤖 🚀

@@ -24,4 +24,4 @@
 
 - Implement function-calling and tool integration.
 - Add multi-agent workflows and automatic context packing.
-- Improve output for context usage, cost (estimate reasoning), and tokens/second output.
+- Improve output for context usage, cost (estimate reasoning), and tokens/second.
