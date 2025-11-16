@@ -17,11 +17,11 @@
 	"actions": {
 		// Each action has a key word (which shows up in the menu):
 		"simplify": {
-			// name of list of models to use:
+			// Name of list of models to use:
 			"models": "models_high",
-			// system prompt:
+			// System prompt:
 			"system": "You are an expert programming agent. Make sure to never negatively impact the correctness or functionality of a program.",
-			// user prompt:
+			// User prompt:
 			"prompt": "Analyze this code and simplify it as much as possible to improve conciseness and clarity. Ensure the code works, but please refactor it to be as minimal as possible to ensure performance and clarity."
 		},
 		"comment": {
@@ -42,28 +42,20 @@
 	},
 
 	// These models are good for most programming tasks but can be slow:
-	"models_ultra": ["ultra_1"],
-
-	// These models are good for many programming tasks
 	"models_high": ["high_1"],
-
-	// These models are for medium tasks
-	"models_medium": ["medium_1"],
 
 	// These models are good for small, routine tasks
 	"models_low": ["low_1"],
 
 	// List of model configurations
 	"models": {
-		// Each model configuration is named, with params.
-		"ultra_1":
-		{
-			"url": "http://127.0.0.1:8081/v1/chat/completions",
-			"model": "gpt-oss-120b", // model to select
+		// Each model configuration is named, with params (local example).
+		"high_1": {
+			"url": "http://127.0.0.1:8080/v1/chat/completions", // local
+			"model": "gpt-oss-20b", // model name (from API)
 			"token": "000000000000", // Token for OpenAI API
 			"options": { // (request API parameters here)
 				"stream": true,  // this is the only thing that works for now
-				// "reasoning_effort": "high", // e.g. OpenAI
 				"chat_template_kwargs": {"reasoning_effort": "high"},
 				"temperature": 1.0,
 				"top_p": 1.0,
@@ -71,54 +63,15 @@
 				"top_k": 0
 			},
 			"context": 131072.0, // Max context length
-			"system": "my_cpu1", // Unique per-device id
+			"system": "my_gpu1", // Unique per-device id
 			"workers": 1,        // Number of concurrent chats supported
 			"speed": 20.0,       // Speed (tk/s for one chat)
 			"effort": 32768.0,   // Approx number of outputs
 			"cost": 0.46         // $ per million tokens in+out
 		},
-		"high_1":
-		{
-			"url": "http://127.0.0.1:8080/v1/chat/completions",
-			"model": "gpt-oss-20b",
-			"token": "000000000000",
-			"options": {
-				"stream": true,
-				"chat_template_kwargs": {"reasoning_effort": "high"},
-				"temperature": 1.0,
-				"top_p": 1.0,
-				"min_p": 0,
-				"top_k": 0
-			},
-			"context": 128000.0,
-			"system": "my_gpu1",
-			"workers": 3,
-			"speed": 120,
-			"effort": 32768.0,
-			"cost": 0.042
-		},
-		"medium_1":
-		{
-			"url": "http://127.0.0.1:8080/v1/chat/completions",
-			"model": "gpt-oss-20b",
-			"token": "000000000000",
-			"options": {
-				"stream": true,
-				"chat_template_kwargs": {"reasoning_effort": "medium"},
-				"temperature": 1.0,
-				"top_p": 1.0,
-				"min_p": 0,
-				"top_k": 0
-			},
-			"context": 128000.0,
-			"system": "my_gpu1",
-			"workers": 3,
-			"speed": 120,
-			"effort": 4096.0,
-			"cost": 0.042
-		},
-		"low_1":
-		{
+
+		// New name for different configuration (same "model"/URL):
+		"low_1": {
 			"url": "http://127.0.0.1:8080/v1/chat/completions",
 			"model": "gpt-oss-20b",
 			"token": "000000000000",
@@ -137,9 +90,64 @@
 			"effort": 512.0,
 			"cost": 0.042
 		},
+
+		//// groq example (recommended cloud provider):
+		// "groq-oss-120": {
+		// 	"url":"https://api.groq.com/openai/v1/chat/completions",
+		// 	"model": "openai/gpt-oss-120b",
+		// 	"token": "<YOUR_GROQ_API_KEY>",
+		// 	"options": {
+		// 		"stream": true,
+		// 		"reasoning_effort": "high",
+		// 		"temperature": 1,
+		// 		"top_p": 1,
+		// 		"presence_penalty": 0.5,
+		// 	},
+		// 	"context": 131072,
+		// 	"system": "groq",
+		// 	"workers": 1000.0,
+		// 	"speed": 500.0,
+		// 	"effort": 32768.0,
+		// 	"cost": 0.75
+		// },
+
+		//// Google configuration:
+		// "gemini-2.5-flash": {
+		// 	"url":"https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+		// 	"model": "gemini-2.5-flash",
+		// 	"token": "<YOUR_GOOGLE_API_KEY>",
+		// 	"options": {
+		// 		"stream": true,
+		// 		"reasoning_effort": "high"
+		// 	},
+		// 	"context": 1050000,
+		// 	"system": "google",
+		// 	"workers": 1000.0,
+		// 	"speed": 79.94,
+		// 	"effort": 24576.0,
+		// 	"cost": 11.25,
+		// },
+
+		//// OpenAI configuration:
+		// "gpt-5-mini": {
+		// 	"url":"https://api.openai.com/v1/chat/completions",
+		// 	"model": "gpt-5-mini",
+		// 	"token": "<YOUR_OPENAI_API_KEY>",
+		// 	"options": {
+		// 		"stream": false,
+		// 		"reasoning_effort": "high",
+		// 		"verbosity": "low"
+		// 	},
+		// 	"context": 400000,
+		// 	"system": "openai",
+		// 	"workers": 1000.0,
+		// 	"speed": 40.0,
+		// 	"effort": 4096.0,
+		// 	"cost": 11.25
+		// },
 	},
 
-	// rename these lookalikes if sanitize_output=true
+	// Rename these lookalike characters if sanitize_on_copy=true
 	"sanitize_dict": {
 		// SINGLE QUOTE
 		"'": [
