@@ -65,7 +65,7 @@ def _pick_model(capability=None):
     capable_models = settings.get(capability)
     models = settings.get("models")
     model = random.choice(capable_models)
-    print("Using", model)
+    print("Using model", model)
     return model
 
 
@@ -175,7 +175,6 @@ def chat_stream(messages, model, cancel=None):
 
 class AgentStreamingTask(threading.Thread):
     """Background worker - streams into the view"""
-
     def __init__(self, view, messages, registry):
         super().__init__(daemon=True)
         self.view = view
@@ -193,7 +192,7 @@ class AgentStreamingTask(threading.Thread):
 
     def cancel(self):
         self._cancel_event.set()
-        self.view.settings().set("is_streaming", False)
+        self.view.settings().set("agentic_is_streaming", False)
 
     def run(self):
         sublime.status_message("Streaming")
@@ -297,12 +296,12 @@ class AgentStreamingTask(threading.Thread):
             return
         self.registry.pop(self.view.id(), None)
         self._write("\n\n# --- User ---\n")
-        self.view.settings().set("is_streaming", False)
+        self.view.settings().set("agentic_is_streaming", False)
 
 
 def start_streaming(view, messages, model_name=None):
     """Public helper - start a streaming task on a view"""
-    view.settings().set("is_streaming", True)
+    view.settings().set("agentic_is_streaming", True)
     if model_name:
         view.settings().set("agent_model", model_name)
     task = AgentStreamingTask(view, messages, _ACTIVE_STREAMERS)
@@ -396,7 +395,7 @@ def _create_chat(window, name, initial="",
     if temporary:
         view.set_scratch(True)
     view.set_name(name)
-    view.settings().set("is_agent_chat", True)
+    view.settings().set("agentic_is_chat", True)
     view.set_syntax_file("Packages/Markdown/Markdown.sublime-syntax")
     if initial:
         view.run_command("append", {"characters": initial})
@@ -418,7 +417,7 @@ def _read_selection(view):
 
 
 class PromptInputHandler(sublime_plugin.TextInputHandler):
-    """Input handler - free-form prompt for AgentCodeCommand"""
+    """Input handler - free-form prompt for AgenticCodeCommand"""
     def placeholder(self):
         return "Enter command string"
 
@@ -426,7 +425,7 @@ class PromptInputHandler(sublime_plugin.TextInputHandler):
         return ""
 
 
-class AgentCodeCommand(sublime_plugin.WindowCommand):
+class AgenticCodeCommand(sublime_plugin.WindowCommand):
     """Start a new chat based on highlighted text"""
     def input(self, args):
         return PromptInputHandler()
@@ -454,14 +453,14 @@ class AgentCodeCommand(sublime_plugin.WindowCommand):
             sublime.status_message("Submitting prompt")
 
 
-class AgentChatCommand(sublime_plugin.WindowCommand):
+class AgenticChatCommand(sublime_plugin.WindowCommand):
     """Interact with an existing chat file"""
     def run(self):
         view = self.window.active_view()
         if not view:
             return
 
-        if view.settings().get("is_streaming"):
+        if view.settings().get("agentic_is_streaming"):
             self.window.run_command("cancel_stream")
             return
 
@@ -472,15 +471,15 @@ class AgentChatCommand(sublime_plugin.WindowCommand):
             self.window.run_command("agent_new_chat")
             return
 
-        view.settings().set("is_streaming", True)
-        view.settings().set("is_agent_chat", True)
+        view.settings().set("agentic_is_streaming", True)
+        view.settings().set("agentic_is_chat", True)
         view.set_syntax_file("Packages/Markdown/Markdown.sublime-syntax")
 
         start_streaming(view, messages)
         sublime.status_message("Submitting prompt")
 
 
-class AgentNewChatCommand(sublime_plugin.WindowCommand):
+class AgenticNewChatCommand(sublime_plugin.WindowCommand):
     """Open a new chat window"""
     def run(self):
         if not self.window.active_view():
@@ -491,7 +490,7 @@ class AgentNewChatCommand(sublime_plugin.WindowCommand):
         view = _create_chat(self.window, "Chat", new_chat, create_pane=False)
 
 
-class AgentCloneChatCommand(sublime_plugin.WindowCommand):
+class AgenticCloneChatCommand(sublime_plugin.WindowCommand):
     """Create a new chat from an existing one"""
     def run(self):
         view = self.window.active_view()
@@ -507,21 +506,21 @@ class AgentCloneChatCommand(sublime_plugin.WindowCommand):
         view = _create_chat(self.window, "Chat", cleaned, create_pane=False)
 
 
-class CancelStreamCommand(sublime_plugin.WindowCommand):
+class AgenticCancelStreamCommand(sublime_plugin.WindowCommand):
     """Cancel an active stream command"""
     def run(self):
         view = self.window.active_view()
-        if not view or not view.settings().get("is_streaming"):
+        if not view or not view.settings().get("agentic_is_streaming"):
             return
         task = _ACTIVE_STREAMERS.get(view.id())
         if task:
             task.cancel()
             sublime.status_message("Streaming cancelled")
         else:
-            view.settings().set("is_streaming", False)
+            view.settings().set("agentic_is_streaming", False)
 
 
-class AgentClearReasoningCommand(sublime_plugin.TextCommand):
+class AgenticClearReasoningCommand(sublime_plugin.TextCommand):
     """Clear reasoning sections from a finished chat"""
     def run(self, edit):
         view = self.view
@@ -537,7 +536,7 @@ class AgentClearReasoningCommand(sublime_plugin.TextCommand):
         sublime.status_message("Chat reasoning cleared")
 
 
-class AgentActionCommand(sublime_plugin.WindowCommand):
+class AgenticActionCommand(sublime_plugin.WindowCommand):
     """Run a user-defined action - see Agentic.sublime-settings"""
     def run(self):
         self.actions = self._load_actions()
@@ -582,7 +581,7 @@ class AgentActionCommand(sublime_plugin.WindowCommand):
         return sublime.load_settings("Agentic.sublime-settings").get("actions")
 
 
-class AgentModelChatCommand(sublime_plugin.WindowCommand):
+class AgenticModelChatCommand(sublime_plugin.WindowCommand):
     """Run a user-defined action - see Agentic.sublime-settings"""
     def run(self):
         self.models = self._load_models()
@@ -629,17 +628,17 @@ class AgentModelChatCommand(sublime_plugin.WindowCommand):
         return sublime.load_settings("Agentic.sublime-settings").get("models")
 
 
-class ViewCloseHandler(sublime_plugin.EventListener):
+class AgenticViewCloseHandler(sublime_plugin.EventListener):
     """
     Close stream when tab (view) closes
     """
     def on_close(self, view):
-        if view.settings().get("is_streaming"):
+        if view.settings().get("agentic_is_streaming"):
             task = _ACTIVE_STREAMERS.get(view.id())
             if task:
                 task.cancel()
             else:
-                view.settings().set("is_streaming", False)
+                view.settings().set("agentic_is_streaming", False)
 
 
 def _update_sanitize_dict():
@@ -675,7 +674,7 @@ def _sanitize_text(text: str) -> str:
     return _SANITIZE_RE.sub(lambda m: _SANITIZE_DICT[m.group(0)], text)
 
 
-class AgentSanitizeCommand(sublime_plugin.TextCommand):
+class AgenticSanitizeCommand(sublime_plugin.TextCommand):
     """Sanitize the whole document or the selected text."""
     def run(self, edit):
         _update_sanitize_dict()

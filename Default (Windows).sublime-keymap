@@ -1,52 +1,52 @@
 [
     {
         "keys": ["escape"],
-        "command": "cancel_stream",
+        "command": "agentic_cancel_stream",
         "context": [
-            { "key": "setting.is_streaming", "operand": true }
+            { "key": "setting.agentic_is_streaming", "operand": true }
         ]
     },
     {
         "keys": ["c"],
-        "command": "cancel_stream",
+        "command": "agentic_cancel_stream",
         "context": [
-            { "key": "setting.is_streaming", "operand": true }
+            { "key": "setting.agentic_is_streaming", "operand": true }
         ]
     },
     {
         "keys": ["ctrl+enter"],
-        "command": "agent_chat",
+        "command": "agentic_chat",
         "context": [
-            { "key": "setting.is_agent_chat", "operand": true },
-            { "key": "setting.is_streaming", "operand": false }
+            { "key": "setting.agentic_is_chat", "operand": true },
+            { "key": "setting.agentic_is_streaming", "operand": false }
         ]
     },
     {
         "keys": ["ctrl+c"],  // sanitize copy (if sanitize_on_copy=true)
         "command": "agentic_copy",
         "context": [
-            { "key": "setting.is_agent_chat", "operand": true },
+            { "key": "setting.agentic_is_chat", "operand": true },
         ]
     },
     {
         "keys": ["ctrl+shift+c"],  // Exact copy
         "command": "copy",
         "context": [
-            { "key": "setting.is_agent_chat", "operand": true },
+            { "key": "setting.agentic_is_chat", "operand": true },
         ]
     },
     {
         "keys": ["ctrl+x"],
         "command": "agentic_cut", // Sanitize cut (if sanitize_on_copy=true)
         "context": [
-            { "key": "setting.is_agent_chat", "operand": true },
+            { "key": "setting.agentic_is_chat", "operand": true },
         ]
     },
     {
         "keys": ["ctrl+shift+x"], // Exact cut
         "command": "cut",
         "context": [
-            { "key": "setting.is_agent_chat", "operand": true },
+            { "key": "setting.agentic_is_chat", "operand": true },
         ]
     }
 ]
