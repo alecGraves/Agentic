@@ -1,0 +1,29 @@
+# Agentic - Sublime Text LLM Agents
+
+## Quick start
+
+1. Configure your models in `Agentic.sublime-settings`, or run an LLM chat completions server on localhost:8080.
+   * Add a model entry with `url`, `model`, `token`, and `options`.
+   * Place your model in the "models_high" list
+
+2. Open the Command Palette (`Ctrl+Shift+P` / `⌘+Shift+P`).
+
+3. Search for **AI Agent** - you'll see a list of palette commands:
+    * `AI Agent` - Run a custom action on the selected text or file
+    * `AI Agent Action` - Start a chat based on a user-defined action.
+    * `AI Agent Model Chat` - Start a new chat with the selected model.
+    * `AI Agent Chat Submit` - Send the current chat file to the LLM.
+    * `AI Agent Clear Reasoning` - Remove reasoning output from a chat file.
+    * `AI Agent Clone Chat` - Duplicate an existing chat file.
+    * `AI Agent New Chat` - Create a brand-new chat file.
+    * `AI Agent Sanitize` - Strip unwanted Unicode from a selection or file.
+    * `AI Agent Settings` - Open `Agentic.sublime-settings` configuration.
+
+3. **Hotkeys (use in a chat file)**
+   * `Ctrl+Enter` / `⌘+Enter` - Submit a chat file to the LLM.
+   * `Esc` or `c` while editing a chat file - Interrupt an ongoing request.
+
+4. Run a command, e.g. highlight a code block and choose **AI Agent**.
+   The plugin will stream the response directly into a new or existing chat file.
+
+Happy Agentic coding! 🤖 🚀

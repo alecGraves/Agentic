@@ -9,7 +9,10 @@ Chats rise, fall, then rest.
 ```
 *~GPT-OSS-20b on Agentic/chat_stream.py using the "haiku" action*
 
-This plugin lets you run models over OpenAI-style chat completion APIs, tested to work with [llama.cpp](https://github.com/ggml-org/llama.cpp), [groq accelerators](https://console.groq.com/docs/api-reference#chat-create), [Google Gemini (TPU)](https://ai.google.dev/gemini-api/docs/openai), and the [OpenAI official API](https://platform.openai.com/docs/api-reference/chat). You can use this plugin to quickly send code snippets or entire files to an LLM and stream results directly back to Sublime Text. Chatting is supported through a simple markdown text file interface with hotkeys (`[ctrl/cmd]+[enter]`, `[esc]/[c]`). There is also support to easily build custom agent actions that you can quickly access from the command palette.
+This plugin lets you run models over OpenAI-style chat completion APIs, tested to work with [llama.cpp](https://github.com/ggml-org/llama.cpp), [groq accelerators](https://console.groq.com/docs/api-reference#chat-create), [Google Gemini (TPU)](https://ai.google.dev/gemini-api/docs/openai), and the [OpenAI official API](https://platform.openai.com/docs/api-reference/chat).
+You can use this plugin to quickly send code snippets or entire files to an LLM and stream results directly back to Sublime Text.
+Chatting is supported through a simple markdown text file interface with hotkeys (`[ctrl/⌘]+[enter]`, `[esc]/[c]`).
+There is also support to easily build custom agent actions that you can quickly access from the command palette.
 
 ## Features 😍
 **Highlight code and use `AI Agent` to launch a custom chat with relevant context:**
@@ -26,7 +29,7 @@ This plugin currently has four major command palette actions:
 - `AI Agent` - takes highlighted text (or an entire file) and a command string to perform a custom action
 - `AI Agent Action` - takes highlighted text (or an entire file) and starts a new chat based on a user-defined action (see `Agentic.sublime-settings`)
 - `AI Agent Model Chat` - takes highlighted text and starts a new chat session with the selected model
-- `AI Agent Chat Submit` - will send the contents of a chat file to an LLM for a chat-like interface (triggered with `[ctrl/cmd]+[enter]` from a chat file; `[c]` or `[esc]` to interrupt)
+- `AI Agent Chat Submit` - will send the contents of a chat file to an LLM for a chat-like interface (triggered with `[ctrl/⌘]+[enter]` from a chat file; `[c]` or `[esc]` to interrupt)
 
 There are also several supplemental palette actions to help work with chats
 - `AI Agent Clear Reasoning` - deletes model 'reasoning' output from chat files
@@ -82,7 +85,7 @@ For settings, there is a convenience command:
 * `"effort"` = Typical number of tokens used to solve an average problem
 * `"cost"` = $ USD per million generated tokens (electricity cost for local GPT-OSS-20B above)
 
-**Common Model Configuration Errors** (see errors in sublime console using ```[ctrl/cmd] + [`]``` or `View` > `Show Console`):
+**Common Model Configuration Errors** (see errors in sublime console using ```[ctrl/⌘] + [`]``` or `View` > `Show Console`):
 * `HTTP Error 400: Bad Request` - bad `"options"` for the model
 * `HTTP Error 401: Unauthorized` - bad authentication token
 * `HTTP Error 404: Not Found` - invalid `"model"` name or bad URL

@@ -1,0 +1,27 @@
+---
+
+# Agentic 1.0.0 - Release Notes
+
+## What's possible in 1.0.0
+
+- **Markdown chat interface** - Create `.md` chat files and stream responses live.
+- **Custom actions** - Define reusable actions in `Agentic.sublime-settings` and launch them via the Command Palette.
+- **Local LLM support** - Seamlessly run llama.cpp, Ollama, or any OpenAI-compatible endpoint.
+- **Accelerator LLM support** - Tested to work with groq (LPU) and google (TPU) models for fast cloud inference.
+- **Contextual commands** - Pass the currently highlighted code or entire file as input context.
+- **Sanitization** - Automatic removal of unwanted Unicode characters from LLM output, configurable in `Agentic.sublime-settings`.
+- **Multiple models** - Configure and switch between several local and remote model configurations defined in a single settings file.
+- **Command-palette commands** - `AI Agent`, `AI Agent Action`, `AI Agent Model Chat`, `AI Agent Chat Submit`, `AI Agent Clear Reasoning`, `AI Agent Clone Chat`, `AI Agent New Chat`, `AI Agent Sanitize`, `AI Agent Settings`.
+- **Chat Hotkeys** - `Ctrl+Enter`/`⌘+Enter` to submit a chat, `Esc` or `c` to interrupt.
+
+## Known issues
+
+- GPT-5 streaming requires a ID-verified OpenAI account; otherwise `stream: true` will fail.
+- Function-calling and multi-agent workflows are not yet implemented.
+- Some APIs do not report tokens/s.
+
+## Next steps
+
+- Implement function-calling and tool integration.
+- Add multi-agent workflows and automatic context packing.
+- Improve output for context usage, cost (estimate reasoning), and tokens/second output.
