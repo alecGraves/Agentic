@@ -9,7 +9,8 @@ Chats rise, fall, then rest.
 ```
 *~GPT-OSS-20b on Agentic/chat_stream.py using the "haiku" action*
 
-This plugin lets you run models over OpenAI-style chat completion APIs, tested to work with [llama.cpp](https://github.com/ggml-org/llama.cpp), [groq accelerators](https://console.groq.com/docs/api-reference#chat-create), [Google Gemini (TPU)](https://ai.google.dev/gemini-api/docs/openai), and the [OpenAI official API](https://platform.openai.com/docs/api-reference/chat).
+This plugin lets you run models over OpenAI-style chat completion APIs, tested to work with [llama.cpp](https://github.com/ggml-org/llama.cpp), [groq (LPU)](https://console.groq.com/docs/api-reference#chat-create), [Google Gemini (TPU)](https://ai.google.dev/gemini-api/docs/openai), [Claude (Trainium/TPU/GPU)](https://docs.claude.com/en/api/openai-sdk), and the [OpenAI official API (GPU)](https://platform.openai.com/docs/api-reference/chat).
+
 You can use this plugin to quickly send code snippets or entire files to an LLM and stream results directly back to Sublime Text.
 Chatting is supported through a simple markdown text file interface with hotkeys (`[ctrl/⌘]+[enter]`, `[esc]/[c]`).
 There is also support to easily build custom agent actions that you can quickly access from the command palette.
@@ -241,7 +242,11 @@ This project is released under 🔥 ⚖ The Unlicense ⚖ 🔥
 
 `Agentic` uses the OpenAI API, so anything that supports it should work. Ollama and llama.cpp are popular programs to run local LLMs. llama.cpp is faster, so this guide covers its use.
 
-Cloud LLM providers will receive any data you choose to send them through `AI Agent` commands, cloud server compute availability can fluctuate, and cloud-hosted model behavior can change suddenly. Due to these problems, it is often better to rely on open-weight local/on-premise models. Many good models like GPT-OSS-20B will run with >90k tokens (~360k characters) of context on a 16 GB graphics card such as the AMD RX 9060 or Nvidia 5060 TI at >50 tk/s or two 8 GB graphics cards like the Nvidia T1000 at >25 tk/s. Larger models like GPT-OSS-120B can run on a modern CPU system with 128 GB of RAM at 20tk/s. Using these options can improve developer productivity and significantly reduce operating costs for running LLMs (e.g. GPT-OSS-20B is $0.05/mil tokens electricity cost running on a 200W local GPU, while the roughly equivalent GPT-5-nano is $0.45/mil tokens: 9x more expensive).
+Cloud LLM providers receive any data you choose to send them through `AI Agent` commands, cloud server compute availability can fluctuate, and cloud-hosted model behavior can change suddenly.
+Due to these problems, it is often better to rely on open-weight local/on-premise models for many  projects.
+Many good models like GPT-OSS-20B will run with >90k tokens (~360k characters) of context on a 16 GB graphics card such as the AMD RX 9060 or Nvidia 5060 TI at >50 tk/s or two 8 GB graphics cards like the Nvidia T1000 at >25 tk/s.
+Larger models like GPT-OSS-120B can run on a modern CPU system with 128 GB of RAM at 20tk/s.
+Using local options can similarly improve development speed at a significantly reduced operating cost (e.g., GPT-OSS-20B is $0.05/mil tokens electricity cost running on a 200W local GPU, while the roughly equivalent GPT-5-nano is $0.45/mil tokens: 9x more expensive).
 
 ### 1. Build llama.cpp (updated 2025)
 To install [llama.cpp](https://github.com/ggml-org/llama.cpp), compile it for your platform. The llama-server file is located at `build/bin/llama-server`

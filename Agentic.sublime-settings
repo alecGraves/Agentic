@@ -99,7 +99,7 @@
 		// 	"options": {
 		// 		"stream": true,
 		// 		"reasoning_effort": "high",
-		// 		"temperature": 1,
+		// 		"temperature": 0.6,
 		// 		"top_p": 1,
 		// 		"presence_penalty": 0.5,
 		// 	},
@@ -117,21 +117,22 @@
 		// 	"model": "gemini-2.5-flash",
 		// 	"token": "<YOUR_GOOGLE_API_KEY>",
 		// 	"options": {
+		//		"temperature": 0.5
 		// 		"stream": true,
 		// 		"reasoning_effort": "high"
 		// 	},
 		// 	"context": 1050000,
 		// 	"system": "google",
 		// 	"workers": 1000.0,
-		// 	"speed": 79.94,
+		// 	"speed": 117.9,
 		// 	"effort": 24576.0,
-		// 	"cost": 11.25,
+		// 	"cost": 2.5,
 		// },
 
 		//// OpenAI configuration:
-		// "gpt-5-mini": {
+		// "gpt-5": {
 		// 	"url":"https://api.openai.com/v1/chat/completions",
-		// 	"model": "gpt-5-mini",
+		// 	"model": "gpt-5",
 		// 	"token": "<YOUR_OPENAI_API_KEY>",
 		// 	"options": {
 		// 		"stream": false,
@@ -144,6 +145,26 @@
 		// 	"speed": 40.0,
 		// 	"effort": 4096.0,
 		// 	"cost": 11.25
+		// },
+
+		//// Anthropic configuration:
+		// "claude-sonnet-4.5": {
+		// 	"url":"https://api.anthropic.com/v1/chat/completions",
+		// 	"model": "claude-sonnet-4-5",
+		// 	"token": "<YOUR_ANTHROPIC_API_KEY>",
+		// 	"options": {
+		// 		"stream": true,
+		// 		"temperature": 0.5,
+		// 		"extra_body":{
+		// 			"thinking": { "type": "enabled", "budget_tokens": 8192 }
+		// 		}
+		// 	},
+		// 	"context": 1000000,
+		// 	"system": "anthropic",
+		// 	"workers": 1000.0,
+		// 	"speed": 45.0,
+		// 	"effort": 16384.0,
+		// 	"cost": 18.0,
 		// },
 	},
 
