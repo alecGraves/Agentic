@@ -31,6 +31,7 @@
 #  Sublime Text builds (no f-string syntax, only .format()).
 # -------------------------------------------------------------
 
+import time
 import json
 import urllib.request
 import threading
@@ -76,12 +77,10 @@ def _parse_metrics(r):
     """
     t = r.get("timings")
     if t:
-        print(t)
         return (t["cache_n"], t["prompt_n"],
                 t["prompt_per_second"], t["predicted_per_second"])
     u = r.get("usage")  # groq / openai
     if u:
-        print(u)
         cache = u.get("prompt_tokens_details", {}).get("cached_tokens", 0)
         prompt = u.get("prompt_tokens", 0) - cache
         pt = u.get("prompt_time", 0) or 1e12
@@ -189,6 +188,7 @@ class AgentStreamingTask(threading.Thread):
             "Agentic.sublime-settings").get("show_reasoning")
         self._buffer = []       # pending writes
         self._pending = False   # a flush is already scheduled?
+        self.start_time = time.time()
 
     def cancel(self):
         self._cancel_event.set()
@@ -197,6 +197,7 @@ class AgentStreamingTask(threading.Thread):
     def run(self):
         sublime.status_message("Streaming")
         prev_reasoning = False
+        cache, tps = (0.0, None)  # default empty performance
 
         self._write("\n\n# --- Agent ---\n")
         sublime.set_timeout(
@@ -210,7 +211,8 @@ class AgentStreamingTask(threading.Thread):
 
         # Load latest model settings
         models = sublime.load_settings("Agentic.sublime-settings").get("models")
-        model = models[self.view.settings().get("agent_model")]
+        model_name = self.view.settings().get("agent_model")
+        model = models[model_name]
 
         try:
             for chunk in chat_stream(self.messages, model, self._cancel_event):
@@ -219,8 +221,6 @@ class AgentStreamingTask(threading.Thread):
                     is_reasoning, text = chunk
                 else:
                     cache, prompt, pps, tps = chunk
-                    sublime.status_message("Done. cache:{} new:{} tk/s:{}".format(
-                            cache, prompt, int(tps)))
                     break
 
                 if self._cancel_event.is_set() or not self.is_valid():
@@ -256,6 +256,30 @@ class AgentStreamingTask(threading.Thread):
                     str(e),
                     error_details))
 
+        ## Estimate and print usage based on elapsed time
+        if not tps:
+            tps = model.get("speed", float("NaN"))
+
+        # Estimate generated tokens and measure input.
+        gen_estimate = (time.time() - self.start_time) * tps
+        input_tokens = sum([len(m["content"]) for m in self.messages]) / CHARS_PER_TOKEN
+
+        # Compute total context usage and percentage of model's context
+        used_context = input_tokens + gen_estimate
+        fraction_used = used_context / model.get("context", float("NaN"))
+
+        # Calculate cost based on inputs
+        token_cost = model.get("cost", float("NaN")) * 1e-6
+        cost = cache * 0.02 * token_cost \
+                + (input_tokens - cache) * 0.2 * token_cost \
+                + gen_estimate * token_cost
+
+        # Log status
+        status = "Streaming Done. {}. Tk/s: {}. Context: {} ({:.0f}%). Cost: {:.3}".format(
+                            model_name, int(tps), int(used_context), fraction_used*100, cost)
+
+        print(status)
+        sublime.status_message(status)
         sublime.set_timeout(self._finalize, 0)
 
     def _write(self, txt):
