@@ -195,7 +195,6 @@ class AgentStreamingTask(threading.Thread):
         self.view.settings().set("agentic_is_streaming", False)
 
     def run(self):
-        sublime.status_message("Streaming")
         prev_reasoning = False
         cache, tps = (0.0, None)  # default empty performance
 
@@ -213,6 +212,10 @@ class AgentStreamingTask(threading.Thread):
         models = sublime.load_settings("Agentic.sublime-settings").get("models")
         model_name = self.view.settings().get("agent_model")
         model = models[model_name]
+
+        status_string = "Streaming {}.".format(model_name)
+        sublime.status_message(status_string)
+        print(status_string)
 
         try:
             for chunk in chat_stream(self.messages, model, self._cancel_event):
@@ -262,7 +265,7 @@ class AgentStreamingTask(threading.Thread):
 
         # Estimate generated tokens and measure input.
         gen_estimate = (time.time() - self.start_time) * tps
-        input_tokens = sum([len(m["content"]) for m in self.messages]) / CHARS_PER_TOKEN
+        input_tokens = sum([len(m.get("content", 0)) for m in self.messages]) / CHARS_PER_TOKEN
 
         # Compute total context usage and percentage of model's context
         used_context = input_tokens + gen_estimate
