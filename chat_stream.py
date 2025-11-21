@@ -251,13 +251,17 @@ class AgentStreamingTask(threading.Thread):
             except Exception:
                 pass
             print(
-                "Could not stream from model:\n"
-                "{}\n{}\n{}\nError: {}{}".format(
+                "Could not stream from {}:\n"
+                "  model: {}\n  url: {}\n  options: {}\nError: {}{}".format(
+                    model_name,
                     model.get("model", '"model" field missing"'),
                     model.get("url", '"url" field missing'),
                     model.get("options", {}),
                     str(e),
                     error_details))
+            sublime.status_message("Streaming Error: {}".format(str(e)))
+            sublime.set_timeout(self._finalize, 0)
+            return
 
         ## Estimate and print usage based on elapsed time
         if not tps:
