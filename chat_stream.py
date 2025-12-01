@@ -219,7 +219,9 @@ class AgentStreamingTask(threading.Thread):
         model_name = self.view.settings().get("agent_model")
         model = models[model_name]
 
-        status_string = "Streaming {}.".format(model_name)
+        input_tokens = int(sum([len(m.get("content", 0)) for m in self.messages]) / CHARS_PER_TOKEN)
+        fraction_used = input_tokens / model.get("context", float("NaN"))
+        status_string = "Streaming {}. Context: {} ({:.0f}%).".format(model_name, input_tokens, fraction_used)
         sublime.status_message(status_string)
         print(status_string)
 
@@ -275,7 +277,6 @@ class AgentStreamingTask(threading.Thread):
 
         # Estimate generated tokens and measure input.
         gen_estimate = (time.time() - self.start_time) * tps
-        input_tokens = sum([len(m.get("content", 0)) for m in self.messages]) / CHARS_PER_TOKEN
 
         # Compute total context usage and percentage of model's context
         used_context = input_tokens + gen_estimate
