@@ -49,7 +49,8 @@
 
 	// List of model configurations
 	"models": {
-		// Each model configuration is named, with params (local example).
+		// Each model configuration is named, with params.
+		// Example configuration for local gpt-oss-20b with "high" and "low" reasoning:
 		"high_1": {
 			"url": "http://127.0.0.1:8080/v1/chat/completions", // local
 			"model": "gpt-oss-20b", // model name (from API)
@@ -91,6 +92,8 @@
 			"effort": 512.0,
 			"cost": 0.042,
 		},
+
+		// The following are example configurations for common cloud providers:
 
 		//// groq example (recommended cloud provider):
 		// "groq-oss-120": {

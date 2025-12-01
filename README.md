@@ -295,30 +295,42 @@ HIPCXX="$(hipconfig -l)/clang" HIP_PATH="$(hipconfig -R)" \
     && make -C build -j $(nproc) llama-server
 ```
 
+Apple M4
+```sh
+cmake -B build
+make -C build llama-server -j10
+```
+
 ### 2. Download a good LLM
 Download a good model like [Qwen-30b-A3b **IQ4-NL**](https://huggingface.co/unsloth/Qwen3-30B-A3B-Thinking-2507-GGUF) or [GPT-OSS-20B **F16**](https://huggingface.co/unsloth/gpt-oss-20b-GGUF).
 
 ### 3. Run llama.cpp with your LLM
 Then, run llama-server:
 
-- OSS 20B, 24GB vram, NVidia:
+- OSS 20B, 24GB vram, NVidia 3090 (200W) (150 tk/s):
 ```sh
 CUDA_VISIBLE_DEVICES=0 llama-server -m ~/models/gpt-oss-20b-F16.gguf -ctk f16 -ctv f16 -np 3 -fa on -c $((32768*4*3)) --top-k 0 --temp 1.0 --top-p 1.0  --min-p 0 --presence-penalty 0.5 --jinja -ngl 20000 --prio 3 --port 8080 --no-mmap --chat-template-kwargs '{"reasoning_effort": "high"}'
 ```
 
-- OSS 20B, 16GB vram, AMD ROCm:
+- OSS 20B, 16GB vram, AMD RX 9060 ROCm (130W) (80 tk/s):
 ```sh
 HIP_VISIBLE_DEVICES=0 llama-server -m ~/models/gpt-oss-20b-F16.gguf -ctk f16 -ctv f16 -fa on -ngl 100 -c $((32768*3)) -np 1 --jinja --port 8080 --chat-template-kwargs '{"reasoning_effort": "high"}'
 ```
 
-- OSS 20B, 2xT1000 8GB:
+- OSS 20B, 2xT1000 8GB  (100W) (30 tk/s):
 ```sh
 llama-server -ngl 99 -c $((32768*2)) -t 4 -fa on -ctk f16 -ctv f16 -m ~/models/gpt-oss-20b-F16.gguf --jinja  --prio 3 --top-k 0 --temp 1.0 --top-p 1.0 --min-p 0 --presence-penalty 0.5 -np 1 --port 8080 --split-mode row --tensor-split 7,8 --chat-template-kwargs '{"reasoning_effort": "high"}'
 ```
 
-- OSS 120B (Intel CPU, 64GB RAM):
+- OSS 20B, 16GB Apple M4 (65W) (25 tk/s):
 ```sh
-CUDA_VISIBLE_DEVICES='' llama-server -fa on -ctk q8_0 -ctv q8_0 -m ~/models/gpt-oss-120b-UD-Q4_K_XL-00001*.gguf -np 1 --n-gpu-layers 99 -c $((32768*2)) --top-k 0 --temp 1.0 --top-p 1.0 --jinja  --min-p 0 --presence-penalty 0.5 -n 38912 --prio 2 --port 8081 --mlock --swa-full --chat-template-kwargs '{"reasoning_effort": "high"}'
+sudo sysctl iogpu.wired_limit_mb=$((14*1024))
+./build/bin/llama-server -m ~/Documents/models/gpt-oss-20b-F16.gguf -c $((32768*3/2)) --jinja --flash-attn on --jinja --no-mmap --host 0.0.0.0
+```
+
+- OSS 120B, Intel CPU, 120GB RAM (200W) (15 tk/s):
+```sh
+CUDA_VISIBLE_DEVICES='' llama-server -fa on -ctk q8_0 -ctv q8_0 -m ~/models/gpt-oss-120b-UD-Q4_K_XL-00001*.gguf -np 1 --n-gpu-layers 99 -c $((32768*2)) --top-k 0 --temp 1.0 --top-p 1.0 --jinja  --min-p 0 --presence-penalty 0.5 --prio 2 --port 8081 --mlock --swa-full --chat-template-kwargs '{"reasoning_effort": "high"}'
 ```
 
 ### 4. Connect
