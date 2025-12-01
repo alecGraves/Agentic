@@ -221,7 +221,7 @@ class AgentStreamingTask(threading.Thread):
 
         input_tokens = int(sum([len(m.get("content", 0)) for m in self.messages]) / CHARS_PER_TOKEN)
         fraction_used = input_tokens / model.get("context", float("NaN"))
-        status_string = "Streaming {}. Context: {} ({:.0f}%).".format(model_name, input_tokens, fraction_used)
+        status_string = "Streaming {}. Context: {} ({:.0f}%).".format(model_name, input_tokens, fraction_used * 100)
         sublime.status_message(status_string)
         print(status_string)
 
