@@ -106,6 +106,12 @@ def chat_stream(messages, model, cancel=None):
         "model": model.get("model"),
     })
 
+    # some local models (EXAONE) do not support "developer"
+    if model.get("no_system_prompt", False):
+        for m in body.get("messages"):
+            if m['role'] == "developer":
+                m['role'] = "user"
+
     if "include_reasoning" in body and body["include_reasoning"]:
         body.update({  # match the package setting if True
             "include_reasoning":

@@ -54,8 +54,8 @@
 			"url": "http://127.0.0.1:8080/v1/chat/completions", // local
 			"model": "gpt-oss-20b", // model name (from API)
 			"token": "000000000000", // Token for OpenAI API
-			"options": { // (request API parameters here)
-				"stream": true,  // this is the only thing that works for now
+			"options": { // (API parameters here)
+				"stream": true,
 				"chat_template_kwargs": {"reasoning_effort": "high"},
 				"temperature": 1.0,
 				"top_p": 1.0,
@@ -64,10 +64,11 @@
 			},
 			"context": 131072.0, // Max context length
 			"system": "my_gpu1", // Unique per-device id
-			"workers": 1,        // Number of concurrent chats supported
-			"speed": 20.0,       // Speed (tk/s for one chat)
+			"workers": 3,        // Number of concurrent chats supported
+			"speed": 120.0,      // Speed (tk/s for one chat)
 			"effort": 32768.0,   // Approx number of outputs
-			"cost": 0.46         // $ per million tokens in+out
+			"cost": 0.042,       // $ per million tokens in+out
+			"no_system_prompt": false // converts system prompt to user if true (for EXAONE)
 		},
 
 		// New name for different configuration (same "model"/URL):
@@ -88,7 +89,7 @@
 			"workers": 3,
 			"speed": 120,
 			"effort": 512.0,
-			"cost": 0.042
+			"cost": 0.042,
 		},
 
 		//// groq example (recommended cloud provider):
