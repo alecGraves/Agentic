@@ -139,24 +139,25 @@ Configuring user-defined actions (`AI Agent Settings` / `Agentic.sublime-setting
 	"cost": 0.75,
 },
 ```
-* This model is integrated with tools, enabling web search ([Tavily](https://www.tavily.com/)), single-page website download, and sandboxed cloud code evaluation, streamed directly back into Sublime Text. Raw results from these actions are output as 'reasoning' tokens.
+* Compound is integrated with tools, enabling web search ([Tavily](https://www.tavily.com/)), single-page website download, and sandboxed cloud code evaluation, streamed directly back into Sublime Text. Raw results from these actions are output as 'reasoning' tokens.
 
-**Example Model configuration - Google (TPU) Gemini 2.5 Pro:** 🏋
+**Example Model configuration - Google (TPU) Gemini 3 Pro:** 🏋
 ```JSON
-"gemini-2.5-pro": {
+"gemini-3-pro": {
 	"url":"https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
-	"model": "gemini-2.5-pro",
+	"model": "gemini-3-pro-preview",
 	"token": "<YOUR_GOOGLE_API_KEY>",
 	"options": {
+		"temperature": 1.0,
 		"stream": true,
 		"reasoning_effort": "high"
 	},
 	"context": 1050000,
 	"system": "google",
 	"workers": 1000.0,
-	"speed": 79.94,
-	"effort": 24576.0,
-	"cost": 11.25,
+	"speed": 77.0,
+	"effort": 16384.0,
+	"cost": 17.0,
 },
 ```
 

@@ -113,21 +113,21 @@
 		// },
 
 		//// Google configuration:
-		// "gemini-2.5-flash": {
+		// "gemini-3-pro": {
 		// 	"url":"https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
-		// 	"model": "gemini-2.5-flash",
+		// 	"model": "gemini-3-pro-preview",
 		// 	"token": "<YOUR_GOOGLE_API_KEY>",
 		// 	"options": {
-		//		"temperature": 0.5
+		// 		"temperature": 1.0,
 		// 		"stream": true,
 		// 		"reasoning_effort": "high"
 		// 	},
 		// 	"context": 1050000,
 		// 	"system": "google",
 		// 	"workers": 1000.0,
-		// 	"speed": 117.9,
-		// 	"effort": 24576.0,
-		// 	"cost": 2.5,
+		// 	"speed": 77.0,
+		// 	"effort": 16384.0,
+		// 	"cost": 17.0,
 		// },
 
 		//// OpenAI configuration:
