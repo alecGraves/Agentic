@@ -32,7 +32,7 @@
         "command": "agentic_sanitize"
     },
     {
-        "caption": "AI Agent Settings",
+        "caption": "Preferences: AI Agent Settings",
         "command": "edit_settings",
         "args": {
           "base_file": "${packages}/Agentic/Agentic.sublime-settings",
