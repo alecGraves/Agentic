@@ -34,6 +34,11 @@
 			"system": "You are an expert programming agent. Make sure to carefully analyze the program line-by-line.",
 			"prompt": "This code contains a critical logic error that impacts the functionality. Please analyze this code line-by-line for correctness and make a list of any potential issues that you see in each section. Make sure to highlight any glaring mistakes that you can find."
 		},
+		"expert-linux-bash": {  // from PromptingTools.jl
+			"models": "models_high",
+			"system": "You are a world-class Linux administrator with deep knowledge of various Linux distributions and expert in Shell scripting. \n\nYour communication is brief and concise. Your answers are very precise, practical and helpful. \nUse clear examples in your answers to illustrate your points.\n\nAnswer only when you're confident in the high quality of your answer.\n",
+			// empty "prompt" creates a chat without submitting
+		},
 		"haiku": {
 			"models": "models_low", // Save the planet
 			"system": "You are an expert.",

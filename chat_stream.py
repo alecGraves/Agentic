@@ -24,6 +24,8 @@
 #
 #  * AI Agent New Chat    - Prepare a new chat file
 #
+#  * AI Agent Set Model   - Set the model for a chat file
+#
 #  All API call logic lives in `chat_stream()` - the single code
 #  path used by all three commands.
 #
@@ -553,7 +555,9 @@ class AgenticCancelStreamCommand(sublime_plugin.WindowCommand):
         task = _ACTIVE_STREAMERS.get(view.id())
         if task:
             task.cancel()
-            sublime.status_message("Streaming cancelled")
+            m = "Streaming cancelled."
+            print(m)
+            sublime.status_message(m)
         else:
             view.settings().set("agentic_is_streaming", False)
 
@@ -599,21 +603,26 @@ class AgenticActionCommand(sublime_plugin.WindowCommand):
         settings = sublime.load_settings("Agentic.sublime-settings")
         models_list = chosen["models"]
         system_prompt = chosen["system"]
-        prompt = chosen["prompt"]
+        prompt = chosen.get("prompt", "")
 
         old = self.window.active_view()
-        content = _read_selection(old)
-        user_prompt = "File: {}\n```\n{}\n```\n{}".format(
-            old.file_name(), content, prompt)
-        new_chat = "# --- System ---\n{}\n\n# --- User ---\n{}\n".format(
+        sel = any(not r.empty() for r in old.sel())
+        if prompt or sel:
+            user_prompt = "File: {}\n```\n{}\n```\n\n{}".format(
+                old.file_name(),  _read_selection(old), prompt)
+        else:
+            user_prompt = ""
+
+        new_chat = "# --- System ---\n{}\n\n# --- User ---\n{}".format(
             system_prompt, user_prompt)
 
         view = _create_chat(self.window, "Chat " + action_name[:12], new_chat)
 
-        messages = _build_messages_from_text(new_chat)
-        model = _pick_model(models_list)
-        start_streaming(view, messages, model)
-        sublime.status_message("Submitting prompt")
+        if prompt:
+            messages = _build_messages_from_text(new_chat)
+            model = _pick_model(models_list)
+            start_streaming(view, messages, model)
+            sublime.status_message("Submitting prompt")
 
     def _load_actions(self):
         return sublime.load_settings("Agentic.sublime-settings").get("actions")
@@ -664,6 +673,28 @@ class AgenticModelChatCommand(sublime_plugin.WindowCommand):
 
     def _load_models(self):
         return sublime.load_settings("Agentic.sublime-settings").get("models")
+
+
+class AgenticSetModelCommand(sublime_plugin.WindowCommand):
+    """Pick a model from your settings and store it in the view."""
+    def run(self):
+        self._models = sublime.load_settings("Agentic.sublime-settings").get("models")
+        if not self._models:
+            sublime.error_message("Agentic.sublime-settings contains no models.")
+            return
+
+        self._keys = list(self._models.keys())
+        self.window.show_quick_panel(self._keys, self._on_done)
+
+    def _on_done(self, index):
+        if index == -1:
+            return
+
+        model_name = self._keys[index]
+        view = self.window.active_view()
+        if view:
+            view.settings().set("agent_model", model_name)
+            sublime.status_message("Model set to %s" % model_name)
 
 
 class AgenticViewCloseHandler(sublime_plugin.EventListener):

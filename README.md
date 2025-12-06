@@ -26,7 +26,7 @@ There is also support to easily build custom agent actions that you can quickly 
 ![Markdown-formatted Documents are used for LLM Chat](pics/markdown_chat.png)
 
 ## Usage 🛠
-This plugin currently has four major command palette actions:
+This plugin currently has five major command palette actions:
 - `AI Agent` - takes highlighted text (or an entire file) and a command string to perform a custom action
 - `AI Agent Action` - takes highlighted text (or an entire file) and starts a new chat based on a user-defined action (see `Agentic.sublime-settings`)
 - `AI Agent Model Chat` - takes highlighted text and starts a new chat session with the selected model
@@ -36,6 +36,7 @@ There are also several supplemental palette actions to help work with chats
 - `AI Agent Clear Reasoning` - deletes model 'reasoning' output from chat files
 - `AI Agent Clone Chat` - creates a copy of an existing chat
 - `AI Agent New Chat` - creates a new chat file
+- `AI Agent Set Model` - set the model for the current chat file
 - `AI Agent Sanitize` - strip LLM unicode from selection or file
 
 For settings, there is a convenience command:

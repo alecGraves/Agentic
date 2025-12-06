@@ -12,6 +12,10 @@
         "command": "agentic_model_chat"
     },
     {
+        "caption": "AI Agent Set Model",
+        "command": "agentic_set_model"
+    },
+    {
         "caption": "AI Agent Chat Submit",
         "command": "agentic_chat"
     },
