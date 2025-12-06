@@ -7,7 +7,7 @@
         ]
     },
     {
-        "keys": ["c"],
+        "keys": ["ctrl+c"],
         "command": "agentic_cancel_stream",
         "context": [
             { "key": "setting.agentic_is_streaming", "operand": true }
