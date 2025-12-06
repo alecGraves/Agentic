@@ -12,7 +12,7 @@ Chats rise, fall, then rest.
 This plugin lets you run models over OpenAI-style chat completion APIs, tested to work with [llama.cpp](https://github.com/ggml-org/llama.cpp), [groq (LPU)](https://console.groq.com/docs/api-reference#chat-create), [Google Gemini (TPU)](https://ai.google.dev/gemini-api/docs/openai), [Claude (Trainium/TPU/GPU)](https://docs.claude.com/en/api/openai-sdk), and the [OpenAI official API (GPU)](https://platform.openai.com/docs/api-reference/chat).
 
 You can use this plugin to quickly send code snippets or entire files to an LLM and stream results directly back to Sublime Text.
-Chatting is supported through a simple markdown text file interface with hotkeys (`[ctrl/⌘]+[enter]`, `[esc]/[c]`).
+Chatting is supported through a simple markdown text file interface with hotkeys (`[ctrl/⌘]+[enter]`, `[esc]/[ctrl+break]`).
 There is also support to easily build custom agent actions that you can quickly access from the command palette.
 
 ## Features 😍
@@ -26,11 +26,11 @@ There is also support to easily build custom agent actions that you can quickly 
 ![Markdown-formatted Documents are used for LLM Chat](pics/markdown_chat.png)
 
 ## Usage 🛠
-This plugin currently has five major command palette actions:
+This plugin currently has four major command palette actions:
 - `AI Agent` - takes highlighted text (or an entire file) and a command string to perform a custom action
 - `AI Agent Action` - takes highlighted text (or an entire file) and starts a new chat based on a user-defined action (see `Agentic.sublime-settings`)
 - `AI Agent Model Chat` - takes highlighted text and starts a new chat session with the selected model
-- `AI Agent Chat Submit` - will send the contents of a chat file to an LLM for a chat-like interface (triggered with `[ctrl/⌘]+[enter]` from a chat file; `[c]` or `[esc]` to interrupt)
+- `AI Agent Chat Submit` - will send the contents of a chat file to an LLM for a chat-like interface (triggered with `[ctrl/⌘]+[enter]` from a chat file; `[ctrl+break]` or `[esc]` to interrupt)
 
 There are also several supplemental palette actions to help work with chats
 - `AI Agent Clear Reasoning` - deletes model 'reasoning' output from chat files
