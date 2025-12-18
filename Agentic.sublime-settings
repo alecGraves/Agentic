@@ -13,7 +13,7 @@
 	"sanitize_output": false,
 
 	// output streaming status and est. cost to console ([ctrl] + [`])
-	"console_log": true,
+	"console_log": false,
 
 	// Actions take the currently selected code (or entire file if no code is selected)
 	//  and send it to the LLM to evaluate with a custom prompt.
