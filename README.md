@@ -25,6 +25,83 @@ There is also support to easily build custom agent actions that you can quickly 
 **Fast and streamlined interactive markdown chat interface with fully editable history and prompts:**
 ![Markdown-formatted Documents are used for LLM Chat](pics/markdown_chat.png)
 
+## Getting Started
+- Oppen settings with the palette action (`[ctrl/⌘]+[shift]+[p]`)  `Preferences: AI Agent Settings`, then modify your `Agentic.sublime-settings`
+
+1. Create a new model list with your API(s) of choice (local llama.cpp API setup steps below).
+
+```json
+{
+	"models": {
+		"groq-oss-120":{
+			"url":"https://api.groq.com/openai/v1/chat/completions",
+			"model": "openai/gpt-oss-120b",
+			"token": "<YOUR_GROQ_API_KEY>",
+			"options": {
+				"stream": true,
+				"reasoning_effort": "high",
+				"temperature": 1,
+				"top_p": 1,
+				"presence_penalty": 0.5,
+			},
+			"context": 131072,
+			"system": "groq",
+			"workers": 1000.0,
+			"speed": 500.0,
+			"effort": 32768.0,
+			"cost": 0.75
+		},
+	}
+}
+```
+
+2. Make a new models list
+```json
+{
+	"models_high": ["groq-oss-120"],
+	"models": {
+		"groq-oss-120":"..."
+	}
+}
+```
+
+3. Set the default model list
+```json
+{
+	"default_models": "models_high",
+	"models_high": ["groq-oss-120"],
+	"models": {
+		"groq-oss-120":"..."
+	}
+}
+```
+
+4. Start a new model chat
+
+
+`[ctrl/⌘]+[shift]+[p]` > `AI Agent Model Chat` > `<your-model>`
+
+5. Submit your query with `[ctrl/⌘]+[enter]`
+
+```markdown
+# --- System ---
+You are an expert programming agent. Focus on correctness and simplicity.
+
+# --- User ---
+hi
+> * press [ctrl/⌘] + [enter] *
+
+# --- Agent ---
+
+## --- Thinking ---
+>The user says "hi". The system instructions: "You are ChatGPT, a large language model trained by OpenAI. Knowledge cutoff: 2024-06. Current date: 2025-12-18." The developer says: "You are an expert programming agent. Focus on correctness and simplicity."
+>
+> The user says "hi". The user is just greeting. So we respond politely. Possibly ask how can I help. Since developer says focus on programming. But the user is just greeting. We can respond friendly. Probably respond: "Hello! How can I assist you today?" That's fine.
+
+## --- Response ---
+Hello! How can I help you today?
+```
+
 ## Usage 🛠
 This plugin currently has four major command palette actions:
 - `AI Agent` - takes highlighted text (or an entire file) and a command string to perform a custom action
@@ -45,7 +122,7 @@ For settings, there is a convenience command:
 ## Settings ✏
 ### Model Configuration
 - You can configure your models by going to `Preferences` > `Package Settings` > `Agentic` > `Settings` and modify your `Agentic.sublime-settings`
-- Or use the command:  `AI Agent Settings` -> modify your `Agentic.sublime-settings`
+- Or use the command:  `Preferences: AI Agent Settings` -> modify your `Agentic.sublime-settings`
 
 **(Example model configuration for local llama.cpp running OpenAI GPT-OSS-120B:)**
 ```json
@@ -85,7 +162,7 @@ For settings, there is a convenience command:
 * `"workers"` = Number of concurrent requests supported on the system
 * `"speed"` = Approximate tokens per second
 * `"effort"` = Typical number of tokens used to solve an average problem
-* `"cost"` = $ USD per million generated tokens (electricity cost for local GPT-OSS-20B above)
+* `"cost"` = $ USD per million generated tokens (electricity cost for local GPT-OSS-20B above) - used for estimating cost
 
 **Common Model Configuration Errors** (see errors in sublime console using ```[ctrl/⌘] + [`]``` or `View` > `Show Console`):
 * `HTTP Error 400: Bad Request` - bad `"options"` for the model
