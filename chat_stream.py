@@ -59,6 +59,10 @@ _LAST_SANITIZE_DICT_RAW = None
 _SANITIZE_DICT = None
 _SANITIZE_RE = None
 
+def _printstatus(msg):
+    sublime.status_message(msg)
+    if sublime.load_settings("Agentic.sublime-settings").get("console_log", False):
+        print(msg)
 
 def _pick_model(capability=None):
     """Return a random model from the provided model list string"""
@@ -68,7 +72,6 @@ def _pick_model(capability=None):
     capable_models = settings.get(capability)
     models = settings.get("models")
     model = random.choice(capable_models)
-    print("Using model", model)
     return model
 
 
@@ -223,9 +226,8 @@ class AgentStreamingTask(threading.Thread):
 
         input_tokens = int(sum([len(m.get("content", 0)) for m in self.messages]) / CHARS_PER_TOKEN)
         fraction_used = input_tokens / model.get("context", float("NaN"))
-        status_string = "Streaming {}. Context: {} ({:.0f}%).".format(model_name, input_tokens, fraction_used * 100)
-        sublime.status_message(status_string)
-        print(status_string)
+        _printstatus("Streaming {}. Context: {} ({:.0f}%).".format(
+            model_name, input_tokens, fraction_used * 100))
 
         try:
             for chunk in chat_stream(self.messages, model, self._cancel_event):
@@ -238,7 +240,7 @@ class AgentStreamingTask(threading.Thread):
 
                 if self._cancel_event.is_set() or not self.is_valid():
                     self._cancel_event.set()
-                    sublime.status_message("Interrupted")
+                    _printstatus("Interrupted {}".format(model_name))
                     break
 
                 if is_reasoning:
@@ -291,11 +293,8 @@ class AgentStreamingTask(threading.Thread):
                 + gen_estimate * token_cost
 
         # Log status
-        status = "Streaming Done. {}. Tk/s: {}. Context: {} ({:.0f}%). Cost: {:.3}".format(
-                            model_name, int(tps), int(used_context), fraction_used*100, cost)
-
-        print(status)
-        sublime.status_message(status)
+        _printstatus("Streaming Done. {}. Tk/s: {}. Context: {} ({:.0f}%). Cost: {:.3}".format(
+            model_name, int(tps), int(used_context), fraction_used*100, cost))
         sublime.set_timeout(self._finalize, 0)
 
     def _write(self, txt):
@@ -555,9 +554,7 @@ class AgenticCancelStreamCommand(sublime_plugin.WindowCommand):
         task = _ACTIVE_STREAMERS.get(view.id())
         if task:
             task.cancel()
-            m = "Streaming cancelled."
-            print(m)
-            sublime.status_message(m)
+            _printstatus("Streaming cancelled.")
         else:
             view.settings().set("agentic_is_streaming", False)
 
@@ -650,7 +647,6 @@ class AgenticModelChatCommand(sublime_plugin.WindowCommand):
             return
         model_name = list(self.models.keys())[index]
         model = self.models[model_name]
-        print(model)
 
         old = self.window.active_view()
         sel = old.sel()
