@@ -26,7 +26,7 @@ There is also support to easily build custom agent actions that you can quickly 
 ![Markdown-formatted Documents are used for LLM Chat](pics/markdown_chat.png)
 
 ## Getting Started
-- Oppen settings with the palette action (`[ctrl/⌘]+[shift]+[p]`)  `Preferences: AI Agent Settings`, then modify your `Agentic.sublime-settings`
+- Open settings with the palette action (`[ctrl/⌘]+[shift]+[p]`)  `Preferences: AI Agent Settings`, then modify your `Agentic.sublime-settings`
 
 1. Create a new model list with your API(s) of choice (local llama.cpp API setup steps below).
 
