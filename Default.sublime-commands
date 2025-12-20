@@ -36,6 +36,10 @@
         "command": "agentic_sanitize"
     },
     {
+        "caption": "AI Agent Insert File",
+        "command": "agentic_insert_file"
+    },
+    {
         "caption": "Preferences: AI Agent Settings",
         "command": "edit_settings",
         "args": {

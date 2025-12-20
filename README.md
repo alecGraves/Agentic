@@ -115,6 +115,7 @@ There are also several supplemental palette actions to help work with chats
 - `AI Agent New Chat` - creates a new chat file
 - `AI Agent Set Model` - set the model for the current chat file
 - `AI Agent Sanitize` - strip LLM unicode from selection or file
+- `AI Agent Insert File` - insert a file from the current project into a chat file
 
 For settings, there is a convenience command:
 - `AI Agent Settings` which will open your configuration file `Agentic.sublime-settings`.

@@ -26,13 +26,15 @@
 #
 #  * AI Agent Set Model   - Set the model for a chat file
 #
+#  * AI Agent Insert File - Insert a file into the chat
+#
 #  All API call logic lives in `chat_stream()` - the single code
 #  path used by all three commands.
 #
 #  The plugin uses only Python features available in older
 #  Sublime Text builds (no f-string syntax, only .format()).
 # -------------------------------------------------------------
-
+import os
 import time
 import json
 import urllib.request
@@ -137,7 +139,7 @@ def chat_stream(messages, model, cancel=None):
     )
 
     if not stream:
-        resp = urllib.request.urlopen(req, timeout=5)
+        resp = urllib.request.urlopen(req)
         resp = json.loads(''.join([r.decode("utf-8") for r in resp]))
         m = resp["choices"][0]["message"]
         if "reasoning_content" in m and m["reasoning_content"]:
@@ -151,7 +153,7 @@ def chat_stream(messages, model, cancel=None):
             yield (t)
         return
 
-    with urllib.request.urlopen(req, timeout=5) as resp:
+    with urllib.request.urlopen(req) as resp:
         for raw in resp:
             if cancel and cancel.is_set():
                 return
@@ -834,3 +836,56 @@ class AgenticCutCommand(sublime_plugin.TextCommand):
         # Status feedback
         end = "" if len(out) == 1 else "s"
         sublime.status_message("Sanitized + Cut {} character{}".format(len(out), end))
+
+
+class AgenticInsertFileCommand(sublime_plugin.WindowCommand):
+    """
+    Insert a file's contents (chosen from the current project) at the
+    current caret position as a new user block.
+    """
+    def run(self):
+        self.view = self.window.active_view()
+        if not self.view or self.view.settings().get("agentic_is_streaming"):
+            return
+
+        # Gather visible files from all project folders
+        self._paths, self._names = [], []
+        for folder in self.window.folders():
+            for root, _, files in os.walk(folder):
+                for f in files:
+                    full = os.path.join(root, f)
+                    rel = os.path.relpath(full, folder)
+                    if rel.startswith('.git'):
+                        continue
+                    self._paths.append(full)
+                    self._names.append(rel)
+
+        if not self._paths:
+            return
+
+        # Let the user pick a file
+        self.window.show_quick_panel(self._names, self._on_done)
+
+    def _on_done(self, idx):
+        if idx < 0:
+            return  # user cancelled
+
+        path = self._paths[idx]
+        try:
+            with open(path, "r", encoding="utf-8", errors="ignore") as fh:
+                content = fh.read()
+        except Exception:
+            sublime.error_message("Could not read file: {}".format(path))
+            return
+
+        # Language hint for markdown fence (extension without dot)
+        lang = os.path.splitext(path)[1].lstrip('.')
+        insertion = "\nFile: {}\n```{}\n{}\n```\n".format(
+            path, lang, content)
+
+        # Insert at each caret (default behaviour leaves cursor after the text)
+        auto_indent = self.view.settings().get('auto_indent', False)
+        self.view.settings().set('auto_indent', False)
+        self.view.run_command('insert', {'characters': insertion})
+        self.view.settings().set('auto_indent', auto_indent)
+
