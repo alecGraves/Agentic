@@ -132,11 +132,12 @@ def chat_stream(messages, model, cancel=None):
         headers={
             "Content-Type": "application/json",
             "Authorization": "Bearer {}".format(token),
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"  # f cloudflare
         },
     )
 
     if not stream:
-        resp = urllib.request.urlopen(req)
+        resp = urllib.request.urlopen(req, timeout=5)
         resp = json.loads(''.join([r.decode("utf-8") for r in resp]))
         m = resp["choices"][0]["message"]
         if "reasoning_content" in m and m["reasoning_content"]:
@@ -150,7 +151,7 @@ def chat_stream(messages, model, cancel=None):
             yield (t)
         return
 
-    with urllib.request.urlopen(req) as resp:
+    with urllib.request.urlopen(req, timeout=5) as resp:
         for raw in resp:
             if cancel and cancel.is_set():
                 return
