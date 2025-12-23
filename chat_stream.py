@@ -134,7 +134,7 @@ def chat_stream(messages, model, cancel=None):
         headers={
             "Content-Type": "application/json",
             "Authorization": "Bearer {}".format(token),
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"  # f cloudflare
+            "User-Agent": "AsyncAPIClient/Python 2.14.0"
         },
     )
 
