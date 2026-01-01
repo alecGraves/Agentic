@@ -860,6 +860,10 @@ class AgenticInsertFileCommand(sublime_plugin.WindowCommand):
                     self._paths.append(full)
                     self._names.append(rel)
 
+        self._names, self._paths = zip(
+            *sorted(zip(self._names, self._paths), key=lambda x: x[1])
+        )
+
         if not self._paths:
             return
 
