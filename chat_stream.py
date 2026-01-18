@@ -60,6 +60,7 @@ TAG_MAP = {
 _LAST_SANITIZE_DICT_RAW = None
 _SANITIZE_DICT = None
 _SANITIZE_RE = None
+_LAST_MODEL_IDX = {}
 
 def _printstatus(msg):
     sublime.status_message(msg)
@@ -73,7 +74,15 @@ def _pick_model(capability=None):
         capability = settings.get("default_models")
     capable_models = settings.get(capability)
     models = settings.get("models")
-    model = random.choice(capable_models)
+
+    # round robin request load balancing
+    if capability not in _LAST_MODEL_IDX:
+        idx = 0
+    else:
+        idx = _LAST_MODEL_IDX[capability]
+    model = capable_models[idx % len(capable_models)]
+    _LAST_MODEL_IDX[capability] = (idx + 1) % len(capable_models)
+
     return model
 
 
